@@ -50,7 +50,7 @@ int main() {
     
     // 3. Set standard font size (letting Hazel handle the default crisp light theme)
     hazel_config_t config;
-    config.font = FL_COURIER;
+    config.font = FL_SCREEN; // Better terminal font mapping for Braille
     config.font_size = 15;
     config.text_fg = FL_BLACK;
     config.input_bg = FL_WHITE;
