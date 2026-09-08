@@ -294,7 +294,11 @@ int HazelApp::run() {
 
 void HazelApp::loadFile(const char* filepath) {
     if (config_.on_open) {
-        if (config_.on_open((hazel_app_t*)this, filepath, user_data_)) return;
+        if (config_.on_open((hazel_app_t*)this, filepath, user_data_)) {
+            editor_->insert_position(0);
+            editor_->show_insert_position();
+            return;
+        }
     }
 
     FILE* f = fopen(filepath, "r");

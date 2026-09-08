@@ -1,12 +1,13 @@
-#include "hazel/hazel.h"
-#include "skred/api.h"
+#include <cstdio>
 #include <iostream>
 #include <cstring>
+#include "hazel/hazel.h"
+#include "skred/api.h"
 #include <FL/Fl.H>
 
-int my_load_cb(hazel_app_t* app, const char* filepath, void* user_data) {
+int my_load_cb(hazel_app_t* app, const char* filepath, void* user_data) { 
     size_t f_len = strlen(filepath);
-    if (f_len < 3 || strcmp(filepath + f_len - 3, ".sk") != 0) return 0; // Let hazel handle it
+    if (f_len < 3 || strcmp(filepath + f_len - 3, ".sk") != 0) return 0;
     
     FILE* f = fopen(filepath, "r");
     if (!f) return 1;
@@ -27,12 +28,12 @@ int my_load_cb(hazel_app_t* app, const char* filepath, void* user_data) {
     
     hazel_set_filepath(app, filepath);
     hazel_set_dirty(app, 0);
-    return 1; // Handled
+    return 1;
 }
 
 int my_save_cb(hazel_app_t* app, const char* filepath, void* user_data) {
     size_t f_len = strlen(filepath);
-    if (f_len < 3 || strcmp(filepath + f_len - 3, ".sk") != 0) return 0; // Let hazel handle it
+    if (f_len < 3 || strcmp(filepath + f_len - 3, ".sk") != 0) return 0;
     
     FILE* f = fopen(filepath, "w");
     if (!f) return 1;
@@ -78,7 +79,7 @@ int my_save_cb(hazel_app_t* app, const char* filepath, void* user_data) {
     fclose(f);
     hazel_set_filepath(app, filepath);
     hazel_set_dirty(app, 0);
-    return 1; // Handled
+    return 1;
 }
 
 void my_eval_engine(const char* input, hazel_ctx_t* ctx, void* user_data) {
@@ -131,6 +132,7 @@ int main(int argc, char** argv) {
     
     if (argc > 1) {
         hazel_load_file(app, argv[1]);
+        
     }
     
     hazel_run(app);
