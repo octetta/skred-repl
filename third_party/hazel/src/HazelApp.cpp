@@ -296,6 +296,12 @@ void HazelApp::loadFile(const char* filepath) {
     FILE* f = fopen(filepath, "r");
     if (!f) return;
     
+    bool is_sk = false;
+    size_t f_len = strlen(filepath);
+    if (f_len >= 3 && strcmp(filepath + f_len - 3, ".sk") == 0) {
+        is_sk = true;
+    }
+    
     buffer_->remove_modify_callback(style_update_cb, this);
     buffer_->text("");
     style_buffer_->text("");
@@ -304,6 +310,25 @@ void HazelApp::loadFile(const char* filepath) {
     char current_style = 'D'; // Default to Markdown
     
     while (fgets(line, sizeof(line), f)) {
+        if (is_sk) {
+            if (line[0] == '#') {
+                current_style = 'D';
+                char* text = line + 1;
+                if (text[0] == ' ') text++;
+                int pos = buffer_->length();
+                buffer_->insert(pos, text);
+                std::string styles(strlen(text), current_style);
+                style_buffer_->insert(pos, styles.c_str());
+            } else {
+                current_style = 'A';
+                int pos = buffer_->length();
+                buffer_->insert(pos, line);
+                std::string styles(strlen(line), current_style);
+                style_buffer_->insert(pos, styles.c_str());
+            }
+            continue;
+        }
+        
         if (strncmp(line, "```hazel", 8) == 0) {
             current_style = 'A';
             continue;
@@ -336,18 +361,22 @@ void HazelApp::openFile() {
     Fl_Native_File_Chooser fnfc;
     fnfc.title("Open Notebook");
     fnfc.type(Fl_Native_File_Chooser::BROWSE_FILE);
-    fnfc.filter("Notebook Files\t*.md\nAll Files\t*");
+    fnfc.filter("Notebook Files\t*.{md,sk}\nMarkdown\t*.md\nSkred Script\t*.sk\nAll Files\t*");
     if (fnfc.show() == 0) {
         loadFile(fnfc.filename());
     }
 }
 void HazelApp::saveFileAs(const char* filepath) {
     std::string path(filepath);
-    // Auto-append .md if no extension exists
     size_t last_slash = path.find_last_of("/\\");
     size_t last_dot = path.find_last_of(".");
     if (last_dot == std::string::npos || (last_slash != std::string::npos && last_dot < last_slash)) {
         path += ".md";
+    }
+    
+    bool is_sk = false;
+    if (path.length() >= 3 && path.substr(path.length() - 3) == ".sk") {
+        is_sk = true;
     }
     
     FILE* f = fopen(path.c_str(), "w");
@@ -361,17 +390,32 @@ void HazelApp::saveFileAs(const char* filepath) {
         char* text = buffer_->text_range(block_start, end_pos);
         int len = strlen(text);
         
-        if (current_style == 'A') {
-            fprintf(f, "```hazel\n%s", text);
-            if (len == 0 || text[len-1] != '\n') fprintf(f, "\n");
-            fprintf(f, "```\n");
-        } else if (isOutputStyle(current_style)) {
-            fprintf(f, "```output\n%s", text);
-            if (len == 0 || text[len-1] != '\n') fprintf(f, "\n");
-            fprintf(f, "```\n");
-        } else if (current_style == 'D') {
-            fprintf(f, "%s", text);
-            if (len == 0 || text[len-1] != '\n') fprintf(f, "\n");
+        if (is_sk) {
+            if (current_style == 'D') {
+                bool new_line = true;
+                for (int i = 0; i < len; i++) {
+                    if (new_line) { fprintf(f, "# "); new_line = false; }
+                    fprintf(f, "%c", text[i]);
+                    if (text[i] == '\n') new_line = true;
+                }
+                if (!new_line) fprintf(f, "\n");
+            } else if (current_style == 'A') {
+                fprintf(f, "%s", text);
+                if (len == 0 || text[len-1] != '\n') fprintf(f, "\n");
+            } // Natively ignore Output cells in .sk format
+        } else {
+            if (current_style == 'A') {
+                fprintf(f, "```hazel\n%s", text);
+                if (len == 0 || text[len-1] != '\n') fprintf(f, "\n");
+                fprintf(f, "```\n");
+            } else if (isOutputStyle(current_style)) {
+                fprintf(f, "```output\n%s", text);
+                if (len == 0 || text[len-1] != '\n') fprintf(f, "\n");
+                fprintf(f, "```\n");
+            } else if (current_style == 'D') {
+                fprintf(f, "%s", text);
+                if (len == 0 || text[len-1] != '\n') fprintf(f, "\n");
+            }
         }
         free(text);
     };
@@ -395,7 +439,7 @@ void HazelApp::saveFile() {
     Fl_Native_File_Chooser fnfc;
     fnfc.title("Save Notebook");
     fnfc.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
-    fnfc.filter("Notebook Files\t*.md\nAll Files\t*");
+    fnfc.filter("Notebook Files\t*.{md,sk}\nMarkdown\t*.md\nSkred Script\t*.sk\nAll Files\t*");
     if (fnfc.show() == 0) {
         saveFileAs(fnfc.filename());
     }
