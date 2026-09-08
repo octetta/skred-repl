@@ -6,7 +6,6 @@
 extern "C" {
 
 void hazel_append_output(hazel_ctx_t* ctx, const char* text, int is_error) {
-    printf("hazel_append_output called! ctx=%p ctx->app=%p text=%s\n", ctx, ctx ? ctx->app : NULL, text);
     if (!ctx || !ctx->app || !text) return;
     
     // We must lock the GUI if called from an async thread

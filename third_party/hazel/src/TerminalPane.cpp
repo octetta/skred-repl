@@ -84,8 +84,7 @@ void TerminalPane::appendOutput(const char* text, bool is_error) {
 }
 
 void TerminalPane::evaluateCommand() {
-    printf("EVAL 1\n"); fflush(stdout);
-    int len = buf_->length() - prompt_pos_;
+        int len = buf_->length() - prompt_pos_;
     if (len < 0) len = 0;
     char* cmd = buf_->text_range(prompt_pos_, buf_->length());
     
@@ -104,19 +103,15 @@ void TerminalPane::evaluateCommand() {
     buf_->add_modify_callback(style_update_cb, this);
     
     // Evaluate via engine
-    hazel_ctx_t ctx;
-    ctx.app = app_;
-    ctx.insert_pos = buf_->length();
-    ctx.at_bottom = true;
-    ctx.is_terminal = true;
+    hazel_ctx_t* ctx = new hazel_ctx_t();
+    ctx->app = app_;
+    ctx->insert_pos = buf_->length();
+    ctx->at_bottom = true;
+    ctx->is_terminal = true;
     
-    printf("EVAL 2\n"); fflush(stdout);
-    app_->evaluateCommand(cmd, &ctx);
-    printf("EVAL 3\n"); fflush(stdout);
+    app_->evaluateCommand(cmd, ctx);
     
-    printf("EVAL 4\n"); fflush(stdout);
     free(cmd);
-    printf("EVAL 5\n"); fflush(stdout);
     
     printPrompt();
 }
