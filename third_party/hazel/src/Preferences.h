@@ -53,6 +53,24 @@ public:
                     }
                 }
                 if (!is_ascii) continue;
+                
+                std::string lower_name = name;
+                for (char& c : lower_name) c = tolower(c);
+                if (lower_name.find("mono") == std::string::npos &&
+                    lower_name.find("code") == std::string::npos &&
+                    lower_name.find("console") == std::string::npos &&
+                    lower_name.find("consolas") == std::string::npos &&
+                    lower_name.find("courier") == std::string::npos &&
+                    lower_name.find("term") == std::string::npos &&
+                    lower_name.find("braille") == std::string::npos &&
+                    lower_name.find("fixed") == std::string::npos &&
+                    lower_name.find("hack") == std::string::npos &&
+                    lower_name.find("menlo") == std::string::npos &&
+                    lower_name.find("monaco") == std::string::npos &&
+                    lower_name.find("inconsolata") == std::string::npos &&
+                    lower_name.find("typewriter") == std::string::npos) {
+                    continue;
+                }
 
                 std::string safe_name = name;
                 size_t pos = 0;
