@@ -1,5 +1,5 @@
 #include "HazelApp.h"
-#include "FontPicker.h"
+#include "Preferences.h"
 #include <FL/Fl.H>
 #include <FL/Fl_Native_File_Chooser.H>
 #include <iostream>
@@ -41,7 +41,7 @@ static void style_update_cb(int pos, int nInserted, int nDeleted, int nRestyled,
 
 HazelEditor::HazelEditor(int x, int y, int w, int h, HazelApp* app) 
     : Fl_Text_Editor(x, y, w, h), app_(app) {
-    linenumber_width(0);
+    linenumber_width(40);
     linenumber_fgcolor(FL_DARK3);
     linenumber_bgcolor(FL_LIGHT2);
 }
@@ -120,14 +120,31 @@ int HazelEditor::handle(int event) {
             return 1;
         }
         
-        // Font Picker
-        if (key == 'f' && (Fl::event_state() & FL_CTRL)) {
-            SimpleFontPicker picker;
-            std::string font = picker.getSelectedFont();
-            if (!font.empty()) {
-                Fl::set_font(FL_FREE_FONT, font.c_str());
+        // Preferences
+        if (key == ',' && (Fl::event_state() & FL_CTRL)) {
+            PreferencesWindow prefs(app_->getConfig());
+            std::string font;
+            int theme = 0;
+            if (prefs.run(font, theme)) {
                 hazel_config_t cfg = app_->getConfig();
-                cfg.font = FL_FREE_FONT;
+                if (!font.empty()) {
+                    Fl::set_font(FL_FREE_FONT, font.c_str());
+                    cfg.font = FL_FREE_FONT;
+                }
+                
+                if (theme == 0) { // Light
+                    cfg.text_fg = FL_BLACK;
+                    cfg.input_bg = FL_WHITE;
+                    cfg.output_bg = fl_rgb_color(245, 245, 250);
+                    cfg.error_bg = fl_rgb_color(255, 235, 235);
+                    cfg.markdown_bg = fl_rgb_color(245, 255, 245);
+                } else if (theme == 1) { // Dark
+                    cfg.text_fg = fl_rgb_color(220, 220, 220);
+                    cfg.input_bg = fl_rgb_color(25, 25, 30);
+                    cfg.output_bg = fl_rgb_color(15, 15, 20);
+                    cfg.error_bg = fl_rgb_color(40, 10, 10);
+                    cfg.markdown_bg = fl_rgb_color(20, 30, 25);
+                }
                 app_->setConfig(&cfg);
             }
             return 1;
@@ -704,6 +721,67 @@ void HazelEditor::draw() {
             }
         }
     }
+    
+    // Draw Custom Cell Badges in Margin
+    int m_width = 40; // linenumber_width
+    int m_x = this->x();
+    fl_color(fl_rgb_color(230, 230, 230)); // margin background
+    fl_rectf(m_x, y_start, m_width, y_end - y_start);
+    
+    auto getBlockType = [&](char s) {
+        if (s == 'D') return 1; // Markdown
+        if (app_->isOutputStyle(s)) return 2; // Output
+        return 0; // Code
+    };
+    
+    fl_font(FL_HELVETICA_BOLD, 10);
+    fl_color(fl_rgb_color(150, 150, 150));
+    
+    for (int y = y_start; y < y_end; y += height) {
+        int pos = xy_to_position(this->x() + m_width, y);
+        if (pos < 0 || pos > buffer()->length()) continue;
+        
+        int line_start = buffer()->line_start(pos);
+        if (pos == line_start) { // First char of the line
+            char curr = app_->getStyleAt(line_start);
+            char prev = (line_start > 0) ? app_->getStyleAt(line_start - 1) : '\0';
+            if (curr == 0) curr = 'A';
+            if (prev == 0) prev = 'A';
+            
+            int curr_type = getBlockType(curr);
+            int prev_type = getBlockType(prev);
+            
+            // If it's the very first line of the document OR the cell type changed
+            if (line_start == 0 || curr_type != prev_type) {
+                // Count how many blocks of this type preceded this one to get index
+                int block_idx = 1;
+                char scan_curr = '\0';
+                for (int i = 0; i < line_start; i++) {
+                    char s = app_->getStyleAt(i);
+                    if (s == 0) s = 'A';
+                    int t = getBlockType(s);
+                    if (t != getBlockType(scan_curr)) {
+                        if (t == curr_type) block_idx++;
+                        scan_curr = s;
+                    }
+                }
+                
+                char badge[16];
+                if (curr_type == 0) snprintf(badge, sizeof(badge), "C%d", block_idx);
+                else if (curr_type == 1) snprintf(badge, sizeof(badge), "M%d", block_idx);
+                else snprintf(badge, sizeof(badge), "O%d", block_idx);
+                
+                int cx, cy;
+                if (position_to_xy(line_start, &cx, &cy)) {
+                    fl_draw(badge, m_x + 4, cy + height - 4);
+                }
+            }
+        }
+    }
+    
+    // Draw a subtle border separating margin from content
+    fl_color(fl_rgb_color(210, 210, 210));
+    fl_line(m_x + m_width - 1, y_start, m_x + m_width - 1, y_end);
 }
 
 void HazelApp::updateStatusBar() {
@@ -744,8 +822,8 @@ void HazelApp::updateStatusBar() {
     const char* slash = strrchr(fname, '/');
     if (slash) fname = slash + 1;
     
-    char status[256];
-    snprintf(status, sizeof(status), " %s%s  |  Ln %d, Col %d  |  %s", 
+    char status[512];
+    snprintf(status, sizeof(status), " %s%s  |  Ln %d, Col %d  |  %s  |  [Ctrl+, Prefs] [Ctrl+Enter Eval] [Ctrl+R RunAll] [Ctrl+Q Quit]", 
              fname, is_dirty_ ? "*" : "", line, col, mode_with_idx);
     
     if (!status_bar_->label() || strcmp(status, status_bar_->label()) != 0) {
