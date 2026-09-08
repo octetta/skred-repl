@@ -198,7 +198,7 @@ int HazelEditor::handle(int event) {
         }
         
         // Bash-style keybindings
-        if (key == '`' && (Fl::event_state() & FL_COMMAND)) {
+        if ((key == '`' || key == '~') && (Fl::event_state() & FL_COMMAND)) {
             app_->toggleTerminal();
             return 1;
         }

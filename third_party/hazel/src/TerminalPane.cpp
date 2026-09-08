@@ -122,9 +122,9 @@ int TerminalPane::handle(int event) {
         int state = Fl::event_state();
         
         // Hide terminal on Ctrl+~
-        if (key == '`' && (state & FL_COMMAND)) {
-            // we will let HazelApp intercept this, so return 0
-            return 0;
+        if ((key == '`' || key == '~') && (state & FL_COMMAND)) {
+            app_->toggleTerminal();
+            return 1;
         }
         
         if (key == FL_Enter || key == FL_KP_Enter) {
