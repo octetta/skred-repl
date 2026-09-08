@@ -21,6 +21,17 @@ private:
     HazelApp* app_;
 };
 
+class HazelApp;
+
+class HazelWindow : public Fl_Double_Window {
+public:
+    HazelWindow(int W, int H, const char* title, HazelApp* app) 
+        : Fl_Double_Window(W, H, title), app_(app) {}
+    void resize(int X, int Y, int W, int H) override;
+private:
+    HazelApp* app_;
+};
+
 class HazelApp {
     friend class TerminalPane;
 public:
@@ -36,6 +47,7 @@ public:
     void saveFile();
     void promptSaveAs();
     void toggleTerminal();
+    void layoutWidgets(int W, int H);
     class TerminalPane* getTerminal() { return terminal_; }
     void evaluateCommand(const char* cmd, hazel_ctx_t* ctx);
     void startRunAll();
@@ -80,7 +92,7 @@ public:
     HazelEditor* getEditor() { return editor_; }
 
 private:
-    Fl_Double_Window* win_;
+    HazelWindow* win_;
     HazelEditor* editor_;
     Fl_Text_Buffer* buffer_;
     Fl_Text_Buffer* style_buffer_;

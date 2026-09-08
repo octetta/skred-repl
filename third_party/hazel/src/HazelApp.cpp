@@ -303,7 +303,7 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     
     is_dirty_ = false;
     prefs_ = new Fl_Preferences(Fl_Preferences::USER, "octetta", "hazel");
-    win_ = new Fl_Double_Window(800, 600, title);
+    win_ = new HazelWindow(800, 600, title, this);
     buffer_ = new Fl_Text_Buffer();
     style_buffer_ = new Fl_Text_Buffer();
     
@@ -317,7 +317,6 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     
     applyConfig();
     
-    Fl_Tile* tile = new Fl_Tile(0, 0, 800, 575);
     editor_ = new HazelEditor(0, 0, 800, 575, this);
     editor_->buffer(buffer_);
     editor_->box(FL_FLAT_BOX);
@@ -326,14 +325,13 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     
     terminal_ = new TerminalPane(0, 400, 800, 175, this);
     terminal_->hide();
-    tile->end();
     
     status_bar_ = new Fl_Box(0, 575, 800, 25, "");
     status_bar_->box(FL_FLAT_BOX);
     status_bar_->color(FL_LIGHT2);
     status_bar_->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     
-    win_->resizable(tile);
+    win_->resizable(win_);
     win_->callback([](Fl_Widget*, void* v){ ((HazelApp*)v)->tryQuit(); }, this);
     win_->end();
     
@@ -1053,20 +1051,34 @@ void HazelApp::setFilepath(const char* path) {
     updateStatusBar();
 }
 
+
+void HazelWindow::resize(int X, int Y, int W, int H) {
+    Fl_Double_Window::resize(X, Y, W, H);
+    if (app_) app_->layoutWidgets(W, H);
+}
+
+void HazelApp::layoutWidgets(int W, int H) {
+    int status_h = 25;
+    status_bar_->resize(0, H - status_h, W, status_h);
+    
+    if (terminal_->visible()) {
+        int th = 175;
+        editor_->resize(0, 0, W, H - status_h - th);
+        terminal_->resize(0, H - status_h - th, W, th);
+    } else {
+        editor_->resize(0, 0, W, H - status_h);
+    }
+}
+
 void HazelApp::toggleTerminal() {
-    int w = win_->w();
-    int h = win_->h() - 25; // Minus status bar
     if (terminal_->visible()) {
         terminal_->hide();
-        editor_->resize(0, 0, w, h);
         editor_->take_focus();
     } else {
-        int th = 175;
-        editor_->resize(0, 0, w, h - th);
-        terminal_->resize(0, h - th, w, th);
         terminal_->show();
         terminal_->take_focus();
     }
+    layoutWidgets(win_->w(), win_->h());
     win_->redraw();
 }
 
