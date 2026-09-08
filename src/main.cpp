@@ -48,15 +48,15 @@ int main() {
     // 2. Initialize the Hazel GUI
     hazel_app_t* app = hazel_create("Skred", my_eval_engine, nullptr);
     
-    // 3. Customize theme to match synth aesthetic
+    // 3. Set standard font size (letting Hazel handle the default crisp light theme)
     hazel_config_t config;
     config.font = FL_COURIER;
     config.font_size = 15;
-    config.text_fg = fl_rgb_color(220, 220, 220);
-    config.input_bg = fl_rgb_color(25, 25, 30);
-    config.output_bg = fl_rgb_color(15, 15, 20);
-    config.error_bg = fl_rgb_color(40, 10, 10);
-    config.markdown_bg = fl_rgb_color(20, 30, 25);
+    config.text_fg = FL_BLACK;
+    config.input_bg = FL_WHITE;
+    config.output_bg = fl_rgb_color(245, 245, 250);
+    config.error_bg = fl_rgb_color(255, 235, 235);
+    config.markdown_bg = fl_rgb_color(245, 255, 245);
     hazel_set_config(app, &config);
     
     // 4. Run the GUI loop
