@@ -821,10 +821,7 @@ void HazelEditor::draw() {
                     
                     fl_rectf(margin_x, cy, width, height);
                     
-                    if (pos == insert_position()) {
-                        fl_color(FL_BLACK);
-                        fl_rectf(cx, cy, 2, height);
-                    }
+                    // We now draw a block cursor at the end of HazelEditor::draw
                 }
             }
         }
@@ -879,6 +876,32 @@ void HazelEditor::draw() {
                 if (position_to_xy(line_start, &cx, &cy)) {
                     fl_draw(badge, m_x + 4, cy + height - 4);
                 }
+            }
+        }
+    }
+    
+    // Custom Block Cursor
+    if (mCursorOn && Fl::focus() == this) {
+        int pos = insert_position();
+        int cx, cy;
+        if (position_to_xy(pos, &cx, &cy)) {
+            char c = (pos < buffer()->length()) ? buffer()->char_at(pos) : '\0';
+            
+            fl_font(textfont(), textsize());
+            int c_width = fl_width("W"); // default to wide char width for empty space
+            if (c != '\n' && c != '\0' && c != '\r') {
+                char s[2] = {c, '\0'};
+                c_width = fl_width(s);
+            }
+            
+            fl_color(FL_BLACK);
+            fl_rectf(cx, cy, c_width, height);
+            
+            if (c != '\n' && c != '\0' && c != '\r') {
+                fl_color(FL_WHITE);
+                char s[2] = {c, '\0'};
+                // Exact FLTK baseline
+                fl_draw(s, cx, cy + mMaxsize - fl_descent());
             }
         }
     }
