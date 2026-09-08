@@ -1,0 +1,52 @@
+name: Build skred-repl
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  release:
+    types: [published]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      
+    - name: Install dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev libfltk1.3-dev libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev ninja-build cmake
+
+    - name: Install dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install fltk cmake ninja
+
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows'
+      # Assuming vcpkg or similar for FLTK, or downloading prebuilt
+      # For now, using MSYS2 or vcpkg would be standard
+      run: |
+        echo "Windows FLTK setup goes here"
+
+    - name: Configure CMake
+      run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build
+      run: cmake --build build --config Release
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: skred-repl-${{ runner.os }}
+        path: |
+          build/skred-repl
+          build/skred-repl.exe

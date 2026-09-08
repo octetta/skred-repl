@@ -1,0 +1,51 @@
+#pragma once
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define HAZEL_VERSION "0.1.0"
+#define HAZEL_VERSION_MAJOR 0
+#define HAZEL_VERSION_MINOR 1
+#define HAZEL_VERSION_PATCH 0
+
+const char* hazel_version();
+
+typedef struct hazel_app_t hazel_app_t;
+
+typedef struct {
+    int font;
+    int font_size;
+    unsigned int input_bg;
+    unsigned int output_bg;
+    unsigned int error_bg;
+    unsigned int markdown_bg;
+    unsigned int text_fg;
+} hazel_config_t;
+
+void hazel_set_config(hazel_app_t* app, const hazel_config_t* config);
+
+// Context passed to the evaluation callback to append output asynchronously
+typedef struct hazel_ctx_t hazel_ctx_t;
+
+// The user's evaluation function.
+// It receives the 'input' text that the user pressed Ctrl+Enter on.
+// It can call hazel_append_output() asynchronously or synchronously.
+// It must call hazel_finish_eval() when done.
+typedef void (*hazel_eval_cb_t)(const char* input, hazel_ctx_t* ctx, void* user_data);
+
+// Appends output to the notebook. Can be called from any thread!
+void hazel_append_output(hazel_ctx_t* ctx, const char* text, int is_error);
+
+// Signals that evaluation is complete. Can be called from any thread!
+void hazel_finish_eval(hazel_ctx_t* ctx);
+
+// Create and run the notebook
+hazel_app_t* hazel_create(const char* title, hazel_eval_cb_t eval_cb, void* user_data);
+int hazel_run(hazel_app_t* app);
+void hazel_destroy(hazel_app_t* app);
+void hazel_load_file(hazel_app_t* app, const char* filepath);
+
+#ifdef __cplusplus
+}
+#endif

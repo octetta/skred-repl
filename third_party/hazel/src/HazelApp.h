@@ -1,0 +1,89 @@
+#pragma once
+#include <FL/Fl_Double_Window.H>
+#include <FL/Fl_Text_Editor.H>
+#include <FL/Fl_Text_Buffer.H>
+#include <FL/Fl_Box.H>
+#include <FL/fl_ask.H>
+#include <FL/Fl_Preferences.H>
+#include <string>
+#include <vector>
+#include <mutex>
+#include "hazel/hazel.h"
+
+
+
+class HazelEditor : public Fl_Text_Editor {
+public:
+    HazelEditor(int x, int y, int w, int h, class HazelApp* app);
+    int handle(int event) override;
+    void draw() override;
+private:
+    HazelApp* app_;
+};
+
+class HazelApp {
+public:
+    HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data);
+    ~HazelApp();
+
+    int run();
+    
+    void loadPreferences();
+    void savePreferences();
+    
+    void openFile();
+    void saveFile();
+    void startRunAll();
+    void finishEvaluation(hazel_ctx_t* ctx);
+    bool run_all_pending_ = false;
+    int highest_modified_pos_ = 0;
+    char pending_style_ = 0;
+    int getHighestModifiedPos() const { return highest_modified_pos_; }
+    void setHighestModifiedPos(int pos) { highest_modified_pos_ = pos; }
+    void setPendingStyle(char s) { pending_style_ = s; }
+    char getPendingStyle() const { return pending_style_; }
+    void loadFile(const char* filepath);
+    void saveFileAs(const char* filepath);
+    void updateStatusBar();
+    bool checkSaveBeforeQuit();
+    void setDirty(bool dirty);
+    bool isDirty() const { return is_dirty_; }
+    void tryQuit();
+    void setConfig(const hazel_config_t* config);
+    
+    void evaluateCurrentBlock();
+    char getStyleAt(int pos);
+    void appendOutput(int insert_pos, const char* text, int is_error);
+    
+    
+    
+    Fl_Text_Buffer* getBuffer() { return buffer_; }
+    Fl_Text_Buffer* getStyleBuffer() { return style_buffer_; }
+    HazelEditor* getEditor() { return editor_; }
+
+private:
+    Fl_Double_Window* win_;
+    HazelEditor* editor_;
+    Fl_Text_Buffer* buffer_;
+    Fl_Text_Buffer* style_buffer_;
+    Fl_Box* status_bar_;
+    std::string current_filepath_;
+    bool is_dirty_;
+    
+    Fl_Preferences* prefs_;
+    
+    hazel_eval_cb_t eval_cb_;
+    void* user_data_;
+    
+    
+    Fl_Text_Display::Style_Table_Entry styletable_[4];
+    hazel_config_t config_;
+    void applyConfig();
+};
+
+struct hazel_ctx_t {
+    HazelApp* app;
+    int insert_pos;
+    std::mutex mtx;
+    bool at_bottom;
+};
