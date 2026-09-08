@@ -50,13 +50,17 @@ public:
                     safe_name.replace(pos, 1, "@@");
                     pos += 2;
                 }
-                font_browser_->add(safe_name.c_str());
+                font_browser_->add(safe_name.c_str(), (void*)(uintptr_t)i);
                 if (current_font_name && strcmp(name, current_font_name) == 0) {
                     selected_idx = font_browser_->size();
                 }
             }
         }
         font_browser_->select(selected_idx);
+        if (selected_idx > 0) {
+            Fl_Font f = (Fl_Font)(uintptr_t)font_browser_->data(selected_idx);
+            preview_->labelfont(f);
+        }
         
         if (current_cfg.input_bg == FL_WHITE) {
             theme_choice_->value(0); // Light
@@ -77,10 +81,8 @@ public:
                         pos += 1;
                     }
                     self->selected_font_ = out_name;
-                    std::string set_name = out_name;
-                    if (set_name[0] == ' ') set_name = set_name.substr(1);
-                    self->preview_->labelfont(FL_FREE_FONT);
-                    Fl::set_font(FL_FREE_FONT, set_name.c_str());
+                    Fl_Font f = (Fl_Font)(uintptr_t)self->font_browser_->data(sel);
+                    self->preview_->labelfont(f);
                     self->preview_->redraw();
                 }
             }

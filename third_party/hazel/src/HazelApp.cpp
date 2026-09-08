@@ -133,10 +133,14 @@ int HazelEditor::handle(int event) {
             if (prefs.run(font, theme)) {
                 hazel_config_t cfg = app_->getConfig();
                 if (!font.empty()) {
-                    std::string set_name = font;
-                    if (set_name[0] == ' ') set_name = set_name.substr(1);
-                    Fl::set_font(FL_FREE_FONT, set_name.c_str());
-                    cfg.font = FL_FREE_FONT;
+                    int num_fonts = Fl::set_fonts("-*");
+                    for (int i = 0; i < num_fonts; i++) {
+                        const char* name = Fl::get_font_name((Fl_Font)i);
+                        if (name && font == name) {
+                            cfg.font = (Fl_Font)i;
+                            break;
+                        }
+                    }
                 }
                 
                 if (theme == 0) { // Light
@@ -1122,10 +1126,14 @@ void HazelApp::loadPreferences() {
         hazel_config_t cfg = config_;
         
         if (!font_name.empty()) {
-            std::string set_name = font_name;
-            if (set_name[0] == ' ') set_name = set_name.substr(1);
-            Fl::set_font(FL_FREE_FONT, set_name.c_str());
-            cfg.font = FL_FREE_FONT;
+            int num_fonts = Fl::set_fonts("-*");
+            for (int i = 0; i < num_fonts; i++) {
+                const char* name = Fl::get_font_name((Fl_Font)i);
+                if (name && font_name == name) {
+                    cfg.font = (Fl_Font)i;
+                    break;
+                }
+            }
         }
         
         if (theme == 1) { // Dark Theme
