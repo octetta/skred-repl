@@ -36,6 +36,7 @@ public:
     void saveFile();
     void promptSaveAs();
     void toggleTerminal();
+    class TerminalPane* getTerminal() { return terminal_; }
     void evaluateCommand(const char* cmd, hazel_ctx_t* ctx);
     void startRunAll();
     void finishEvaluation(hazel_ctx_t* ctx);

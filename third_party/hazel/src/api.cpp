@@ -1,5 +1,6 @@
 #include "hazel/hazel.h"
 #include "HazelApp.h"
+#include "TerminalPane.h"
 #include <FL/Fl.H>
 #include <string.h>
 
@@ -11,8 +12,12 @@ void hazel_append_output(hazel_ctx_t* ctx, const char* text, int is_error) {
     // We must lock the GUI if called from an async thread
     Fl::lock();
     
-    ctx->app->appendOutput(ctx->insert_pos, text, is_error);
-    ctx->insert_pos += strlen(text);
+    if (ctx->is_terminal) {
+        ctx->app->getTerminal()->appendOutput(text, is_error);
+    } else {
+        ctx->app->appendOutput(ctx->insert_pos, text, is_error);
+        ctx->insert_pos += strlen(text);
+    }
     
     Fl::unlock();
     Fl::awake();
