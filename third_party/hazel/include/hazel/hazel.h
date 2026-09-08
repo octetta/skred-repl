@@ -21,6 +21,8 @@ typedef struct {
     unsigned int error_bg;
     unsigned int markdown_bg;
     unsigned int text_fg;
+    int (*on_open)(hazel_app_t* app, const char* filepath, void* user_data);
+    int (*on_save)(hazel_app_t* app, const char* filepath, void* user_data);
 } hazel_config_t;
 
 void hazel_set_config(hazel_app_t* app, const hazel_config_t* config);
@@ -45,6 +47,13 @@ hazel_app_t* hazel_create(const char* title, hazel_eval_cb_t eval_cb, void* user
 int hazel_run(hazel_app_t* app);
 void hazel_destroy(hazel_app_t* app);
 void hazel_load_file(hazel_app_t* app, const char* filepath);
+
+void hazel_clear(hazel_app_t* app);
+void hazel_append_block(hazel_app_t* app, char style, const char* text);
+const char* hazel_get_text(hazel_app_t* app);
+const char* hazel_get_styles(hazel_app_t* app);
+void hazel_set_filepath(hazel_app_t* app, const char* filepath);
+void hazel_set_dirty(hazel_app_t* app, int dirty);
 
 #ifdef __cplusplus
 }

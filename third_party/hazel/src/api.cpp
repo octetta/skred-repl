@@ -52,6 +52,32 @@ void hazel_load_file(hazel_app_t* app, const char* filepath) {
     }
 }
 
+void hazel_clear(hazel_app_t* app) {
+    if (app) ((HazelApp*)app)->clear();
+}
+
+void hazel_append_block(hazel_app_t* app, char style, const char* text) {
+    if (app) ((HazelApp*)app)->appendBlock(style, text);
+}
+
+const char* hazel_get_text(hazel_app_t* app) {
+    if (app) return ((HazelApp*)app)->getText();
+    return NULL;
+}
+
+const char* hazel_get_styles(hazel_app_t* app) {
+    if (app) return ((HazelApp*)app)->getStyles();
+    return NULL;
+}
+
+void hazel_set_filepath(hazel_app_t* app, const char* filepath) {
+    if (app) ((HazelApp*)app)->setFilepath(filepath);
+}
+
+void hazel_set_dirty(hazel_app_t* app, int dirty) {
+    if (app) ((HazelApp*)app)->setDirty(dirty);
+}
+
 }
 
 const char* hazel_version() {

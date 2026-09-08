@@ -47,6 +47,13 @@ public:
     }
     void loadFile(const char* filepath);
     void saveFileAs(const char* filepath);
+
+    void clear();
+    void appendBlock(char style, const char* text);
+    const char* getText() const;
+    const char* getStyles() const;
+    void setFilepath(const char* path);
+
     void updateStatusBar();
     bool checkSaveBeforeQuit();
     void setDirty(bool dirty);
