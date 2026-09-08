@@ -1005,8 +1005,8 @@ void HazelApp::tryQuit() {
 void HazelApp::applyConfig() {
     styletable_[0] = { (Fl_Color)config_.text_fg, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.input_bg };
     styletable_[1] = { (Fl_Color)config_.text_fg, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.output_bg };
-    styletable_[2] = { FL_DARK_RED, config_.font | FL_BOLD, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.error_bg };
-    styletable_[3] = { FL_DARK_GREEN, config_.font | FL_ITALIC, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.markdown_bg };
+    styletable_[2] = { FL_DARK_RED, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.error_bg };
+    styletable_[3] = { FL_DARK_GREEN, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.markdown_bg };
 }
 
 void HazelApp::setConfig(const hazel_config_t* config) {
