@@ -73,7 +73,7 @@ void TerminalPane::appendOutput(const char* text, bool is_error) {
     std::string clean_text = text;
     if (clean_text.back() != '\n') clean_text += '\n';
     
-    std::string s(clean_text.length(), is_error ? 'B' : 'C');
+    std::string s(clean_text.length(), is_error ? 'C' : 'B');
     style_buf_->insert(p, s.c_str());
     buf_->insert(p, clean_text.c_str());
     buf_->add_modify_callback(style_update_cb, this);
