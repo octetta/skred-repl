@@ -23,7 +23,7 @@ public:
         new Fl_Box(10, 10, 400, 20, "Select Font:");
         font_browser_ = new Fl_Hold_Browser(10, 30, 400, 180);
         font_browser_->has_scrollbar(Fl_Browser_::BOTH);
-        font_browser_->format_char(0);
+        
         
         new Fl_Box(10, 220, 100, 25, "Theme:");
         theme_choice_ = new Fl_Choice(110, 220, 300, 25);
@@ -44,7 +44,13 @@ public:
         for (int i = 0; i < num_fonts; i++) {
             const char* name = Fl::get_font_name((Fl_Font)i);
             if (name) {
-                font_browser_->add(name);
+                std::string safe_name = name;
+                size_t pos = 0;
+                while ((pos = safe_name.find('@', pos)) != std::string::npos) {
+                    safe_name.replace(pos, 1, "@@");
+                    pos += 2;
+                }
+                font_browser_->add(safe_name.c_str());
                 if (current_font_name && strcmp(name, current_font_name) == 0) {
                     selected_idx = font_browser_->size();
                 }
@@ -64,9 +70,15 @@ public:
             if (sel > 0) {
                 const char* txt = self->font_browser_->text(sel);
                 if (txt) {
-                    self->selected_font_ = txt;
+                    std::string out_name = txt;
+                    size_t pos = 0;
+                    while ((pos = out_name.find("@@", pos)) != std::string::npos) {
+                        out_name.replace(pos, 2, "@");
+                        pos += 1;
+                    }
+                    self->selected_font_ = out_name;
                     self->preview_->labelfont(FL_FREE_FONT);
-                    Fl::set_font(FL_FREE_FONT, txt);
+                    Fl::set_font(FL_FREE_FONT, out_name.c_str());
                     self->preview_->redraw();
                 }
             }
