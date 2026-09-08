@@ -53,19 +53,19 @@ int HazelEditor::handle(int event) {
         }
         int key = Fl::event_key();
         
-        if (key == 'q' && (Fl::event_state() & FL_CTRL)) {
+        if (key == 'q' && (Fl::event_state() & FL_COMMAND)) {
             app_->tryQuit();
             return 1;
-        } else if (key == 'r' && (Fl::event_state() & FL_CTRL)) {
+        } else if (key == 'r' && (Fl::event_state() & FL_COMMAND)) {
             app_->startRunAll();
             return 1;
-        } else if (key == 's' && (Fl::event_state() & FL_CTRL)) {
+        } else if (key == 's' && (Fl::event_state() & FL_COMMAND)) {
             app_->saveFile();
             return 1;
-        } else if (key == 'o' && (Fl::event_state() & FL_CTRL)) {
+        } else if (key == 'o' && (Fl::event_state() & FL_COMMAND)) {
             app_->openFile();
             return 1;
-        } else if (key == 'd' && (Fl::event_state() & FL_CTRL)) {
+        } else if (key == 'd' && (Fl::event_state() & FL_COMMAND)) {
             FILE* fp = fopen("dump.txt", "w");
             fprintf(fp, "--- TEXT ---\n%s\n--- STYLE ---\n%s\n", buffer()->text(), app_->getStyleBuffer()->text());
             fclose(fp);
@@ -73,7 +73,7 @@ int HazelEditor::handle(int event) {
         }
         
         // Convert to Markdown
-        if (key == 'm' && (Fl::event_state() & FL_CTRL)) {
+        if (key == 'm' && (Fl::event_state() & FL_COMMAND)) {
             int pos = insert_position();
             char style = app_->getStyleAt(pos);
             if (style != 'A' && pos > 0 && app_->getStyleAt(pos - 1) == 'A' && buffer()->char_at(pos - 1) != '\n') {
@@ -97,7 +97,7 @@ int HazelEditor::handle(int event) {
         }
         
         // Convert to Code
-        if (key == 'y' && (Fl::event_state() & FL_CTRL)) {
+        if (key == 'y' && (Fl::event_state() & FL_COMMAND)) {
             int pos = insert_position();
             char style = app_->getStyleAt(pos);
             if (style != 'D' && pos > 0 && app_->getStyleAt(pos - 1) == 'D' && buffer()->char_at(pos - 1) != '\n') {
@@ -121,7 +121,7 @@ int HazelEditor::handle(int event) {
         }
         
         // Preferences
-        if (key == ',' && (Fl::event_state() & FL_CTRL)) {
+        if (key == ',' && (Fl::event_state() & FL_COMMAND)) {
             PreferencesWindow prefs(app_->getConfig());
             std::string font;
             int theme = 0;
@@ -151,13 +151,13 @@ int HazelEditor::handle(int event) {
         }
         
         // Evaluate Block
-        if ((key == FL_Enter || key == FL_KP_Enter) && (Fl::event_state() & FL_CTRL)) {
+        if ((key == FL_Enter || key == FL_KP_Enter) && (Fl::event_state() & FL_COMMAND)) {
             app_->evaluateCurrentBlock();
             return 1;
         }
         
         // Prevent modification of output cells (B = Output, C = Error)
-        bool is_modifying = (key == FL_BackSpace || key == FL_Delete || key == FL_Enter || key == FL_KP_Enter || (key >= 0x20 && key <= 0xff && !(Fl::event_state() & FL_CTRL) && !(Fl::event_state() & FL_ALT)) || ((key == 'v' || key == 'x') && (Fl::event_state() & FL_CTRL)));
+        bool is_modifying = (key == FL_BackSpace || key == FL_Delete || key == FL_Enter || key == FL_KP_Enter || (key >= 0x20 && key <= 0xff && !(Fl::event_state() & FL_CTRL) && !(Fl::event_state() & FL_ALT)) || ((key == 'v' || key == 'x') && (Fl::event_state() & FL_COMMAND)));
         if (is_modifying) {
             if (buffer()->selected()) {
                 int start, end;
@@ -193,7 +193,7 @@ int HazelEditor::handle(int event) {
         }
         
         // Bash-style keybindings
-        if ((Fl::event_state() & FL_CTRL)) {
+        if ((Fl::event_state() & FL_COMMAND)) {
             if (key == 'a') {
                 insert_position(buffer()->line_start(insert_position()));
                 show_insert_position();
