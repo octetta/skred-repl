@@ -26,6 +26,7 @@ typedef struct {
 } hazel_config_t;
 
 void hazel_set_config(hazel_app_t* app, const hazel_config_t* config);
+void hazel_load_preferences(hazel_app_t* app);
 
 // Context passed to the evaluation callback to append output asynchronously
 typedef struct hazel_ctx_t hazel_ctx_t;

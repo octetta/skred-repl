@@ -129,6 +129,7 @@ int main(int argc, char** argv) {
     config.on_open = my_load_cb;
     config.on_save = my_save_cb;
     hazel_set_config(app, &config);
+    hazel_load_preferences(app);
     
     if (argc > 1) {
         hazel_load_file(app, argv[1]);

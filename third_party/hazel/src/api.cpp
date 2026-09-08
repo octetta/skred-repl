@@ -93,3 +93,7 @@ void hazel_set_config(hazel_app_t* app, const hazel_config_t* config) {
         ((HazelApp*)app)->setConfig(config);
     }
 }
+
+extern "C" void hazel_load_preferences(hazel_app_t* app) {
+    if (app) ((HazelApp*)app)->loadPreferences();
+}

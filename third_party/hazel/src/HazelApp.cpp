@@ -1085,3 +1085,52 @@ void HazelApp::toggleTerminal() {
 void HazelApp::evaluateCommand(const char* cmd, hazel_ctx_t* ctx) {
     if (eval_cb_) eval_cb_(cmd, ctx, user_data_);
 }
+
+#include <cstdlib>
+#include <fstream>
+#include <sys/stat.h>
+
+static std::string getPrefsPath() {
+    const char* home = getenv("HOME");
+    if (!home) return "hazel_prefs.cfg";
+    std::string dir = std::string(home) + "/.config";
+    mkdir(dir.c_str(), 0755);
+    dir += "/hazel";
+    mkdir(dir.c_str(), 0755);
+    return dir + "/prefs.cfg";
+}
+
+void HazelApp::savePreferences(const std::string& font_name, int theme) {
+    std::ofstream out(getPrefsPath());
+    if (out.is_open()) {
+        out << font_name << "\n";
+        out << theme << "\n";
+    }
+}
+
+void HazelApp::loadPreferences() {
+    std::ifstream in(getPrefsPath());
+    if (in.is_open()) {
+        std::string font_name;
+        int theme = 0;
+        std::getline(in, font_name);
+        in >> theme;
+        
+        hazel_config_t cfg = config_;
+        
+        if (!font_name.empty()) {
+            Fl::set_font(FL_FREE_FONT, font_name.c_str());
+            cfg.font = FL_FREE_FONT;
+        }
+        
+        if (theme == 1) { // Dark Theme
+            cfg.text_fg = fl_rgb_color(220, 220, 220);
+            cfg.input_bg = fl_rgb_color(30, 30, 30);
+            cfg.output_bg = fl_rgb_color(40, 40, 45);
+            cfg.error_bg = fl_rgb_color(60, 20, 20);
+            cfg.markdown_bg = fl_rgb_color(25, 40, 25);
+        }
+        
+        setConfig(&cfg);
+    }
+}
