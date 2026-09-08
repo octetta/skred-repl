@@ -46,7 +46,7 @@ int main() {
     skred_logger(1);
     
     // 2. Initialize the Hazel GUI
-    Fl::set_font(FL_COURIER, "monospace");
+    Fl::set_font(FL_COURIER, "DejaVu Sans Mono"); // Try to explicitly grab a font with known Braille coverage
     hazel_app_t* app = hazel_create("Skred", my_eval_engine, nullptr);
     
     // 3. Set standard font size (letting Hazel handle the default crisp light theme)
