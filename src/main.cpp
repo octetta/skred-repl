@@ -46,11 +46,12 @@ int main() {
     skred_logger(1);
     
     // 2. Initialize the Hazel GUI
+    Fl::set_font(FL_COURIER, "monospace");
     hazel_app_t* app = hazel_create("Skred", my_eval_engine, nullptr);
     
     // 3. Set standard font size (letting Hazel handle the default crisp light theme)
     hazel_config_t config;
-    config.font = FL_SCREEN; // Better terminal font mapping for Braille
+    config.font = FL_COURIER;
     config.font_size = 15;
     config.text_fg = FL_BLACK;
     config.input_bg = FL_WHITE;
