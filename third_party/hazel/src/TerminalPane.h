@@ -13,6 +13,7 @@ public:
     ~TerminalPane();
 
     int handle(int event) override;
+    void draw() override;
     
     void printPrompt();
     void appendOutput(const char* text, bool is_error);

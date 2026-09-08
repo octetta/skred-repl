@@ -38,7 +38,7 @@ TerminalPane::TerminalPane(int X, int Y, int W, int H, HazelApp* app)
     this->textfont(app->config_.font);
     this->textsize(app->config_.font_size);
     this->cursor_color(app->config_.text_fg);
-    this->cursor_style(Fl_Text_Display::BLOCK_CURSOR);
+    this->cursor_style(Fl_Text_Display::SIMPLE_CURSOR);
     
     this->highlight_data(style_buf_, app_->styletable_, app_->next_style_index_, 'A', 0, 0);
     buf_->add_modify_callback(style_update_cb, this);
@@ -55,9 +55,9 @@ void TerminalPane::printPrompt() {
     const char* prompt = "skred> ";
     buf_->remove_modify_callback(style_update_cb, this);
     int p = buf_->length();
-    buf_->insert(p, prompt);
-    std::string s(strlen(prompt), 'D');
+    std::string s(strlen(prompt), 'A');
     style_buf_->insert(p, s.c_str());
+    buf_->insert(p, prompt);
     buf_->add_modify_callback(style_update_cb, this);
     
     prompt_pos_ = buf_->length();
@@ -73,9 +73,9 @@ void TerminalPane::appendOutput(const char* text, bool is_error) {
     std::string clean_text = text;
     if (clean_text.back() != '\n') clean_text += '\n';
     
-    buf_->insert(p, clean_text.c_str());
     std::string s(clean_text.length(), is_error ? 'B' : 'C');
     style_buf_->insert(p, s.c_str());
+    buf_->insert(p, clean_text.c_str());
     buf_->add_modify_callback(style_update_cb, this);
     
     prompt_pos_ = buf_->length(); // advance prompt pos
@@ -99,8 +99,8 @@ void TerminalPane::evaluateCommand() {
     // Echo newline
     buf_->remove_modify_callback(style_update_cb, this);
     int p = buf_->length();
-    buf_->insert(p, "\n");
     style_buf_->insert(p, "A");
+    buf_->insert(p, "\n");
     buf_->add_modify_callback(style_update_cb, this);
     
     // Evaluate via engine
@@ -139,10 +139,7 @@ int TerminalPane::handle(int event) {
             if (history_index_ > 0) {
                 history_index_--;
                 buf_->remove(prompt_pos_, buf_->length());
-                style_buf_->remove(prompt_pos_, style_buf_->length());
                 buf_->insert(prompt_pos_, history_[history_index_].c_str());
-                std::string s(history_[history_index_].length(), 'A');
-                style_buf_->insert(prompt_pos_, s.c_str());
                 insert_position(buf_->length());
             }
             return 1;
@@ -150,15 +147,11 @@ int TerminalPane::handle(int event) {
             if (history_index_ + 1 < history_.size()) {
                 history_index_++;
                 buf_->remove(prompt_pos_, buf_->length());
-                style_buf_->remove(prompt_pos_, style_buf_->length());
                 buf_->insert(prompt_pos_, history_[history_index_].c_str());
-                std::string s(history_[history_index_].length(), 'A');
-                style_buf_->insert(prompt_pos_, s.c_str());
                 insert_position(buf_->length());
             } else if (history_index_ + 1 == history_.size()) {
                 history_index_++;
                 buf_->remove(prompt_pos_, buf_->length());
-                style_buf_->remove(prompt_pos_, style_buf_->length());
                 insert_position(buf_->length());
             }
             return 1;
@@ -174,4 +167,28 @@ int TerminalPane::handle(int event) {
     }
     
     return Fl_Text_Editor::handle(event);
+}
+
+void TerminalPane::draw() {
+    Fl_Text_Editor::draw();
+    
+    if (mCursorOn && Fl::focus() == this) {
+        int pos = insert_position();
+        int cx, cy;
+        if (position_to_xy(pos, &cx, &cy)) {
+            char c = (pos < buffer()->length()) ? buffer()->char_at(pos) : '\0';
+            
+            fl_font(textfont(), textsize());
+            int c_width = fl_width("W");
+            
+            fl_color(FL_BLACK);
+            fl_rectf(cx, cy, c_width, mMaxsize);
+            
+            if (c != '\n' && c != '\0' && c != '\r') {
+                fl_color(FL_WHITE);
+                char s[2] = {c, '\0'};
+                fl_draw(s, cx, cy + mMaxsize - fl_descent());
+            }
+        }
+    }
 }
