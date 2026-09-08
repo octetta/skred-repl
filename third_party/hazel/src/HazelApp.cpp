@@ -451,15 +451,15 @@ void HazelApp::evaluateCurrentBlock() {
     int pos = editor_->insert_position();
     char style = getStyleAt(pos);
     
-    // If the cursor is exactly at the end of an input block (or end of file), 
-    // it might read the style of the next block (e.g. 'B') or ' '.
-    // We should safely fall back to the left character if we aren't in an 'A' block.
-    if (style != 'A' && pos > 0 && getStyleAt(pos - 1) == 'A') {
-        pos = pos - 1;
-        style = 'A';
+    if (style != 'A' && style != 'D' && pos > 0) {
+        char left = getStyleAt(pos - 1);
+        if (left == 'A' || left == 'D') {
+            pos = pos - 1;
+            style = left;
+        }
     }
     
-    if (style != 'A') return; // Only evaluate input blocks
+    if (style != 'A' && style != 'D') return; 
     
     int start = pos;
     while (start > 0 && style_buffer_->char_at(start - 1) == style) start--;
@@ -467,6 +467,31 @@ void HazelApp::evaluateCurrentBlock() {
     while (end < buffer_->length() - 1 && style_buffer_->char_at(end + 1) == style) end++;
     if (end < buffer_->length()) end++;
     
+    if (style == 'D') {
+        int next_pos = end;
+        if (next_pos >= buffer_->length()) {
+            buffer_->remove_modify_callback(style_update_cb, this);
+            while (end > start && buffer_->char_at(end - 1) == '\n') {
+                buffer_->remove(end - 1, end);
+                style_buffer_->remove(end - 1, end);
+                end--;
+            }
+            buffer_->insert(end, "\n");
+            style_buffer_->insert(end, "A");
+            buffer_->add_modify_callback(style_update_cb, this);
+            next_pos = end + 1;
+        }
+        
+        editor_->insert_position(next_pos);
+        editor_->show_insert_position();
+        
+        if (run_all_pending_) {
+            Fl::add_timeout(0.01, [](void* d) {
+                ((HazelApp*)d)->evaluateCurrentBlock();
+            }, this);
+        }
+        return;
+    }
     // Check if there is an existing output block immediately following this input block.
     // An output block consists of contiguous 'B' and 'C' characters.
     int output_end = end;
@@ -696,12 +721,12 @@ void HazelApp::finishEvaluation(hazel_ctx_t* ctx) {
         int pos = editor_->insert_position();
         char style = getStyleAt(pos);
         
-        if (style == 'A') {
+        if (style == 'A' || style == 'D') {
             int end = pos;
-            while (end < buffer_->length() && getStyleAt(end) == 'A') end++;
+            while (end < buffer_->length() && getStyleAt(end) == style) end++;
             
             // A cell is considered empty if it contains just a trailing newline scaffold at the EOF.
-            if (end - pos <= 1 && end >= buffer_->length()) {
+            if (style == 'A' && end - pos <= 1 && end >= buffer_->length()) {
                 run_all_pending_ = false;
                 
                 editor_->insert_position(buffer_->length());
