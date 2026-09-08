@@ -440,24 +440,118 @@ void HazelApp::evaluateCurrentBlock() {
     free(input);
 }
 
+// Very basic 256 color map approximation
+static unsigned int map_256_to_rgb(int code) {
+    if (code < 16) {
+        // Standard ANSI 16
+        unsigned int colors[16] = {
+            0x000000, 0x800000, 0x008000, 0x808000, 0x000080, 0x800080, 0x008080, 0xc0c0c0,
+            0x808080, 0xff0000, 0x00ff00, 0xffff00, 0x0000ff, 0xff00ff, 0x00ffff, 0xffffff
+        };
+        return colors[code];
+    } else if (code < 232) {
+        // 6x6x6 color cube
+        code -= 16;
+        int b = code % 6;
+        int g = (code / 6) % 6;
+        int r = (code / 36) % 6;
+        return fl_rgb_color(r ? r * 40 + 55 : 0, g ? g * 40 + 55 : 0, b ? b * 40 + 55 : 0);
+    } else {
+        // 24 grayscale
+        int gray = (code - 232) * 10 + 8;
+        return fl_rgb_color(gray, gray, gray);
+    }
+}
+
+char HazelApp::getAnsiStyle(unsigned int fg, unsigned int bg, bool is_error) {
+    for (int i = 4; i < next_style_index_; i++) {
+        if (styletable_[i].color == (Fl_Color)fg && styletable_[i].bgcolor == (Fl_Color)bg) {
+            return (char)('A' + i);
+        }
+    }
+    
+    if (next_style_index_ >= 250) {
+        return is_error ? 'C' : 'B';
+    }
+    
+    int i = next_style_index_++;
+    styletable_[i] = { (Fl_Color)fg, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)bg };
+    
+    editor_->highlight_data(style_buffer_, styletable_, next_style_index_, 'A', 0, 0);
+    return (char)('A' + i);
+}
+
 void HazelApp::appendOutput(int insert_pos, const char* text, int is_error) {
-    printf("APPEND_OUTPUT called! insert_pos=%d text=%s\n", insert_pos, text);
-    int len = strlen(text);
-    if (len == 0) return;
+    if (!text || !buffer_ || !style_buffer_) return;
+    
+    std::string clean_text;
+    std::string clean_styles;
+    
+    char current_style = is_error ? 'C' : 'B';
+    unsigned int current_fg = is_error ? config_.error_bg : config_.text_fg;
+    unsigned int current_bg = is_error ? config_.error_bg : config_.output_bg;
+    
+    const char* src = text;
+    while (*src) {
+        if (*src == '\x1b' && *(src + 1) == '[') {
+            src += 2;
+            int codes[16] = {0};
+            int num_codes = 0;
+            
+            while (*src && *src != 'm' && num_codes < 16) {
+                if (*src >= '0' && *src <= '9') {
+                    codes[num_codes] = codes[num_codes] * 10 + (*src - '0');
+                } else if (*src == ';') {
+                    num_codes++;
+                }
+                src++;
+            }
+            if (*src == 'm') {
+                num_codes++;
+                src++;
+            }
+            
+            // Apply ANSI codes
+            for (int i = 0; i < num_codes; i++) {
+                int c = codes[i];
+                if (c == 0) {
+                    current_fg = config_.text_fg;
+                    current_bg = is_error ? config_.error_bg : config_.output_bg;
+                    current_style = is_error ? 'C' : 'B';
+                } else if (c == 38 && i + 2 < num_codes && codes[i+1] == 5) {
+                    current_fg = map_256_to_rgb(codes[i+2]);
+                    current_style = getAnsiStyle(current_fg, current_bg, is_error);
+                    i += 2;
+                } else if (c == 48 && i + 2 < num_codes && codes[i+1] == 5) {
+                    current_bg = map_256_to_rgb(codes[i+2]);
+                    current_style = getAnsiStyle(current_fg, current_bg, is_error);
+                    i += 2;
+                } else if (c >= 30 && c <= 37) {
+                    current_fg = map_256_to_rgb(c - 30);
+                    current_style = getAnsiStyle(current_fg, current_bg, is_error);
+                } else if (c >= 40 && c <= 47) {
+                    current_bg = map_256_to_rgb(c - 40);
+                    current_style = getAnsiStyle(current_fg, current_bg, is_error);
+                }
+            }
+            continue;
+        }
+        
+        clean_text += *src;
+        clean_styles += current_style;
+        src++;
+    }
+    
+    if (clean_text.empty()) return;
     
     buffer_->remove_modify_callback(style_update_cb, this);
-    
-    buffer_->insert(insert_pos, text);
-    
-    char style_char = is_error ? 'C' : 'B';
-    std::string styles(len, style_char);
-    style_buffer_->insert(insert_pos, styles.c_str());
-    
+    buffer_->insert(insert_pos, clean_text.c_str());
+    style_buffer_->insert(insert_pos, clean_styles.c_str());
     buffer_->add_modify_callback(style_update_cb, this);
     
     // Push the user's cursor to the end of the output so they are ready to type
     if (editor_->insert_position() <= insert_pos) {
-        editor_->insert_position(insert_pos + len);
+        editor_->insert_position(insert_pos + clean_text.length());
         editor_->show_insert_position();
     }
 }
@@ -623,8 +717,10 @@ void HazelApp::updateStatusBar() {
     snprintf(status, sizeof(status), " %s%s  |  Ln %d, Col %d  |  %s", 
              fname, is_dirty_ ? "*" : "", line, col, mode);
     
-    status_bar_->copy_label(status);
-    status_bar_->redraw();
+    if (!status_bar_->label() || strcmp(status, status_bar_->label()) != 0) {
+        status_bar_->copy_label(status);
+        status_bar_->redraw();
+    }
 }
 
 void HazelApp::setDirty(bool dirty) {
