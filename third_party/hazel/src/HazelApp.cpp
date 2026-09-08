@@ -77,7 +77,7 @@ int HazelEditor::handle(int event) {
         }
         
         // Convert to Markdown
-        if (key == 'm' && (Fl::event_state() & FL_COMMAND)) {
+        if (key == 'u' && (Fl::event_state() & FL_COMMAND)) {
             int pos = insert_position();
             char style = app_->getStyleAt(pos);
             if (style != 'A' && pos > 0 && app_->getStyleAt(pos - 1) == 'A' && buffer()->char_at(pos - 1) != '\n') {
@@ -197,6 +197,63 @@ int HazelEditor::handle(int event) {
         }
         
         // Bash-style keybindings
+        if ((Fl::event_state() & FL_COMMAND) && (Fl::event_state() & FL_SHIFT)) {
+            if (key == 'c' || key == 'x') {
+                int pos = insert_position();
+                char style = app_->getStyleAt(pos);
+                if (style != 'A' && style != 'D' && pos > 0) {
+                    char left = app_->getStyleAt(pos - 1);
+                    if (left == 'A' || left == 'D') {
+                        pos = pos - 1;
+                        style = left;
+                    }
+                }
+                
+                int start = pos;
+                while (start > 0 && app_->getStyleAt(start - 1) == style) start--;
+                int end = pos;
+                while (end < buffer()->length() - 1 && app_->getStyleAt(end + 1) == style) end++;
+                if (end < buffer()->length()) end++;
+                
+                if (start < end) {
+                    char* t = buffer()->text_range(start, end);
+                    app_->cell_clip_text_ = t;
+                    app_->cell_clip_style_ = style;
+                    free(t);
+                    
+                    if (key == 'x') {
+                        buffer()->remove_modify_callback(style_update_cb, app_);
+                        buffer()->remove(start, end);
+                        app_->getStyleBuffer()->remove(start, end);
+                        buffer()->add_modify_callback(style_update_cb, app_);
+                        insert_position(start);
+                        show_insert_position();
+                    }
+                }
+                return 1;
+            } else if (key == 'v') {
+                if (app_->cell_clip_style_ != 0 && !app_->cell_clip_text_.empty()) {
+                    int pos = insert_position();
+                    buffer()->remove_modify_callback(style_update_cb, app_);
+                    
+                    // Add newline if we are pasting a block and not at start of line
+                    int l_start = buffer()->line_start(pos);
+                    std::string payload = app_->cell_clip_text_;
+                    if (pos != l_start) {
+                        payload = "\n" + payload;
+                    }
+                    
+                    buffer()->insert(pos, payload.c_str());
+                    std::string s(payload.length(), app_->cell_clip_style_);
+                    app_->getStyleBuffer()->insert(pos, s.c_str());
+                    buffer()->add_modify_callback(style_update_cb, app_);
+                    insert_position(pos + payload.length());
+                    show_insert_position();
+                }
+                return 1;
+            }
+        }
+        
         if ((Fl::event_state() & FL_COMMAND)) {
             if (key == 'a') {
                 insert_position(buffer()->line_start(insert_position()));

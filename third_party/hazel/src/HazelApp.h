@@ -39,6 +39,8 @@ public:
     bool run_all_pending_ = false;
     int highest_modified_pos_ = 0;
     char pending_style_ = 0;
+    std::string cell_clip_text_;
+    char cell_clip_style_ = 0;
     int getHighestModifiedPos() const { return highest_modified_pos_; }
     void setHighestModifiedPos(int pos) { highest_modified_pos_ = pos; }
     void setPendingStyle(char s) { pending_style_ = s; }
