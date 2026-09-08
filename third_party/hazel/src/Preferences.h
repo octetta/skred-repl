@@ -44,6 +44,16 @@ public:
         for (int i = 0; i < num_fonts; i++) {
             const char* name = Fl::get_font_name((Fl_Font)i);
             if (name) {
+                // Filter out names with non-ASCII characters to prevent tofu boxes
+                bool is_ascii = true;
+                for (int j = 0; name[j]; j++) {
+                    if ((unsigned char)name[j] > 127) {
+                        is_ascii = false;
+                        break;
+                    }
+                }
+                if (!is_ascii) continue;
+
                 std::string safe_name = name;
                 size_t pos = 0;
                 while ((pos = safe_name.find('@', pos)) != std::string::npos) {
