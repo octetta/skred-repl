@@ -33,6 +33,7 @@ public:
     
     void openFile();
     void saveFile();
+    void promptSaveAs();
     void startRunAll();
     void finishEvaluation(hazel_ctx_t* ctx);
     bool run_all_pending_ = false;

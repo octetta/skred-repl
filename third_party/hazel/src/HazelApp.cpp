@@ -60,7 +60,11 @@ int HazelEditor::handle(int event) {
             app_->startRunAll();
             return 1;
         } else if (key == 's' && (Fl::event_state() & FL_COMMAND)) {
-            app_->saveFile();
+            if (Fl::event_state() & FL_SHIFT) {
+                app_->promptSaveAs();
+            } else {
+                app_->saveFile();
+            }
             return 1;
         } else if (key == 'o' && (Fl::event_state() & FL_COMMAND)) {
             app_->openFile();
@@ -401,13 +405,21 @@ void HazelApp::saveFileAs(const char* filepath) {
     setDirty(false);
 }
 
-void HazelApp::saveFile() {
+void HazelApp::promptSaveAs() {
     Fl_Native_File_Chooser fnfc;
-    fnfc.title("Save Notebook");
+    fnfc.title("Save Notebook As...");
     fnfc.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
     fnfc.filter("Notebook Files\t*.{md,sk}\nMarkdown\t*.md\nSkred Script\t*.sk\nAll Files\t*");
     if (fnfc.show() == 0) {
         saveFileAs(fnfc.filename());
+    }
+}
+
+void HazelApp::saveFile() {
+    if (!current_filepath_.empty()) {
+        saveFileAs(current_filepath_.c_str());
+    } else {
+        promptSaveAs();
     }
 }
 
