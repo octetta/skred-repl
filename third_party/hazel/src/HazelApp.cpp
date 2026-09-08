@@ -151,6 +151,7 @@ int HazelEditor::handle(int event) {
                     cfg.markdown_bg = fl_rgb_color(20, 30, 25);
                 }
                 app_->setConfig(&cfg);
+                app_->savePreferences(font, theme);
             }
             return 1;
         }

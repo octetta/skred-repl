@@ -22,6 +22,8 @@ public:
     PreferencesWindow(const hazel_config_t& current_cfg) : Fl_Double_Window(420, 360, "Preferences") {
         new Fl_Box(10, 10, 400, 20, "Select Font:");
         font_browser_ = new Fl_Hold_Browser(10, 30, 400, 180);
+        font_browser_->has_scrollbar(Fl_Browser_::BOTH);
+        font_browser_->format_char(0);
         
         new Fl_Box(10, 220, 100, 25, "Theme:");
         theme_choice_ = new Fl_Choice(110, 220, 300, 25);
