@@ -34,6 +34,8 @@ public:
     void openFile();
     void saveFile();
     void promptSaveAs();
+    void toggleTerminal();
+    void evaluateCommand(const char* cmd, hazel_ctx_t* ctx);
     void startRunAll();
     void finishEvaluation(hazel_ctx_t* ctx);
     bool run_all_pending_ = false;
@@ -81,6 +83,7 @@ private:
     Fl_Text_Buffer* buffer_;
     Fl_Text_Buffer* style_buffer_;
     Fl_Box* status_bar_;
+    class TerminalPane* terminal_;
     std::string current_filepath_;
     bool is_dirty_;
     
@@ -102,4 +105,5 @@ struct hazel_ctx_t {
     int insert_pos;
     std::mutex mtx;
     bool at_bottom;
+    bool is_terminal;
 };

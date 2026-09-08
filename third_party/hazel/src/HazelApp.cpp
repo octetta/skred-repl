@@ -1,4 +1,5 @@
 #include "HazelApp.h"
+#include "TerminalPane.h"
 #include "Preferences.h"
 #include <FL/Fl.H>
 #include <FL/Fl_Native_File_Chooser.H>
@@ -197,6 +198,11 @@ int HazelEditor::handle(int event) {
         }
         
         // Bash-style keybindings
+        if (key == '`' && (Fl::event_state() & FL_COMMAND)) {
+            app_->toggleTerminal();
+            return 1;
+        }
+
         if ((Fl::event_state() & FL_COMMAND) && (Fl::event_state() & FL_SHIFT)) {
             if (key == 'c' || key == 'x') {
                 int pos = insert_position();
@@ -311,18 +317,23 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     
     applyConfig();
     
+    Fl_Tile* tile = new Fl_Tile(0, 0, 800, 575);
     editor_ = new HazelEditor(0, 0, 800, 575, this);
     editor_->buffer(buffer_);
     editor_->box(FL_FLAT_BOX);
     editor_->cursor_style(Fl_Text_Display::SIMPLE_CURSOR);
     editor_->highlight_data(style_buffer_, styletable_, next_style_index_, 'A', 0, 0);
     
+    terminal_ = new TerminalPane(0, 400, 800, 175, this);
+    terminal_->hide();
+    tile->end();
+    
     status_bar_ = new Fl_Box(0, 575, 800, 25, "");
     status_bar_->box(FL_FLAT_BOX);
     status_bar_->color(FL_LIGHT2);
     status_bar_->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     
-    win_->resizable(editor_);
+    win_->resizable(tile);
     win_->callback([](Fl_Widget*, void* v){ ((HazelApp*)v)->tryQuit(); }, this);
     win_->end();
     
@@ -570,6 +581,7 @@ void HazelApp::evaluateCurrentBlock() {
     ctx->app = this;
     ctx->insert_pos = end;
     ctx->at_bottom = at_bottom;
+    ctx->is_terminal = false;
     
     printf("Calling eval_cb_! input=%s\n", input);
     eval_cb_(input, ctx, user_data_);
@@ -734,6 +746,9 @@ void HazelApp::startRunAll() {
 }
 
 void HazelApp::finishEvaluation(hazel_ctx_t* ctx) {
+    if (ctx->is_terminal) {
+        return;
+    }
     if (ctx->at_bottom) {
         
         editor_->insert_position(buffer_->length());
@@ -775,6 +790,8 @@ void HazelApp::finishEvaluation(hazel_ctx_t* ctx) {
             run_all_pending_ = false;
         }
     }
+    
+    delete ctx;
 }
 
 void HazelEditor::draw() {
@@ -950,6 +967,11 @@ void HazelApp::updateStatusBar() {
     snprintf(status, sizeof(status), " %s%s  |  Ln %d, Col %d  |  %s  |  ^, Pref  ^RET Eval  ^R RunAll  ^Y Code  ^U Mkdn  ^Q Quit", 
              fname, is_dirty_ ? "*" : "", line, col, mode_with_idx);
     
+    // Quick patch to add ^~ Term to the status bar cheat sheet
+    std::string s(status);
+    s = s.replace(s.find("Quit"), 4, "Quit  ^` Term");
+    snprintf(status, sizeof(status), "%s", s.c_str());
+    
     if (!status_bar_->label() || strcmp(status, status_bar_->label()) != 0) {
         status_bar_->copy_label(status);
         status_bar_->redraw();
@@ -1022,4 +1044,25 @@ const char* HazelApp::getStyles() const {
 void HazelApp::setFilepath(const char* path) {
     current_filepath_ = path ? path : "";
     updateStatusBar();
+}
+
+void HazelApp::toggleTerminal() {
+    int w = win_->w();
+    int h = win_->h() - 25; // Minus status bar
+    if (terminal_->visible()) {
+        terminal_->hide();
+        editor_->resize(0, 0, w, h);
+        editor_->take_focus();
+    } else {
+        int th = 175;
+        editor_->resize(0, 0, w, h - th);
+        terminal_->resize(0, h - th, w, th);
+        terminal_->show();
+        terminal_->take_focus();
+    }
+    win_->redraw();
+}
+
+void HazelApp::evaluateCommand(const char* cmd, hazel_ctx_t* ctx) {
+    if (eval_cb_) eval_cb_(cmd, ctx, user_data_);
 }

@@ -27,7 +27,7 @@ FetchContent_MakeAvailable(fltk)
 
 add_library(hazel
     src/HazelApp.cpp 
-    src/api.cpp
+    src/api.cpp src/TerminalPane.cpp
 )
 
 target_include_directories(hazel PUBLIC 
