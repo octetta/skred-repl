@@ -130,8 +130,10 @@ int HazelEditor::handle(int event) {
             PreferencesWindow prefs(app_->getConfig());
             std::string font;
             int theme = 0;
-            if (prefs.run(font, theme)) {
+            int size = 15;
+            if (prefs.run(font, theme, size)) {
                 hazel_config_t cfg = app_->getConfig();
+                cfg.font_size = size;
                 if (!font.empty()) {
                     int num_fonts = Fl::set_fonts("-*");
                     for (int i = 0; i < num_fonts; i++) {
@@ -157,7 +159,7 @@ int HazelEditor::handle(int event) {
                     cfg.markdown_bg = fl_rgb_color(20, 30, 25);
                 }
                 app_->setConfig(&cfg);
-                app_->savePreferences(font, theme);
+                app_->savePreferences(font, theme, size);
             }
             return 1;
         }
@@ -1107,11 +1109,12 @@ static std::string getPrefsPath() {
     return dir + "/prefs.cfg";
 }
 
-void HazelApp::savePreferences(const std::string& font_name, int theme) {
+void HazelApp::savePreferences(const std::string& font_name, int theme, int size) {
     std::ofstream out(getPrefsPath());
     if (out.is_open()) {
         out << font_name << "\n";
         out << theme << "\n";
+        out << size << "\n";
     }
 }
 
@@ -1120,8 +1123,12 @@ void HazelApp::loadPreferences() {
     if (in.is_open()) {
         std::string font_name;
         int theme = 0;
+        int size = 15;
         std::getline(in, font_name);
         in >> theme;
+        if (in >> size) {
+            config_.font_size = size;
+        }
         
         hazel_config_t cfg = config_;
         

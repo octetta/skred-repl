@@ -41,7 +41,7 @@ public:
     int run();
     
     void loadPreferences();
-    void savePreferences(const std::string& font, int theme);
+    void savePreferences(const std::string& font, int theme, int size);
     
     void openFile();
     void saveFile();
