@@ -77,8 +77,10 @@ public:
                         pos += 1;
                     }
                     self->selected_font_ = out_name;
+                    std::string set_name = out_name;
+                    if (set_name[0] == ' ') set_name = set_name.substr(1);
                     self->preview_->labelfont(FL_FREE_FONT);
-                    Fl::set_font(FL_FREE_FONT, out_name.c_str());
+                    Fl::set_font(FL_FREE_FONT, set_name.c_str());
                     self->preview_->redraw();
                 }
             }

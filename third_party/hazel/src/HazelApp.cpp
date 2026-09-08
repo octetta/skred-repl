@@ -133,7 +133,9 @@ int HazelEditor::handle(int event) {
             if (prefs.run(font, theme)) {
                 hazel_config_t cfg = app_->getConfig();
                 if (!font.empty()) {
-                    Fl::set_font(FL_FREE_FONT, font.c_str());
+                    std::string set_name = font;
+                    if (set_name[0] == ' ') set_name = set_name.substr(1);
+                    Fl::set_font(FL_FREE_FONT, set_name.c_str());
                     cfg.font = FL_FREE_FONT;
                 }
                 
@@ -1120,7 +1122,9 @@ void HazelApp::loadPreferences() {
         hazel_config_t cfg = config_;
         
         if (!font_name.empty()) {
-            Fl::set_font(FL_FREE_FONT, font_name.c_str());
+            std::string set_name = font_name;
+            if (set_name[0] == ' ') set_name = set_name.substr(1);
+            Fl::set_font(FL_FREE_FONT, set_name.c_str());
             cfg.font = FL_FREE_FONT;
         }
         
