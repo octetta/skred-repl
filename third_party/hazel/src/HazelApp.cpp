@@ -314,6 +314,7 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     editor_ = new HazelEditor(0, 0, 800, 575, this);
     editor_->buffer(buffer_);
     editor_->box(FL_FLAT_BOX);
+    editor_->cursor_style(Fl_Text_Display::SIMPLE_CURSOR);
     editor_->highlight_data(style_buffer_, styletable_, next_style_index_, 'A', 0, 0);
     
     status_bar_ = new Fl_Box(0, 575, 800, 25, "");
@@ -888,14 +889,10 @@ void HazelEditor::draw() {
             char c = (pos < buffer()->length()) ? buffer()->char_at(pos) : '\0';
             
             fl_font(textfont(), textsize());
-            int c_width = fl_width("W"); // default to wide char width for empty space
-            if (c != '\n' && c != '\0' && c != '\r') {
-                char s[2] = {c, '\0'};
-                c_width = fl_width(s);
-            }
+            int c_width = fl_width("W"); // Monospace uniform block width
             
             fl_color(FL_BLACK);
-            fl_rectf(cx, cy, c_width, height);
+            fl_rectf(cx, cy, c_width, mMaxsize);
             
             if (c != '\n' && c != '\0' && c != '\r') {
                 fl_color(FL_WHITE);
