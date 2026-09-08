@@ -889,6 +889,11 @@ void HazelEditor::draw() {
                 
                 int cx, cy;
                 if (position_to_xy(line_start, &cx, &cy)) {
+                    if (line_start > 0) {
+                        fl_color(FL_BLACK);
+                        fl_line(m_x, cy, this->x() + this->w(), cy);
+                    }
+                    fl_color(fl_rgb_color(150, 150, 150));
                     fl_draw(badge, m_x + 4, cy + height - 4);
                 }
             }
