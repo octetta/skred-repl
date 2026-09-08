@@ -4,26 +4,7 @@
 #include <cstring>
 #include <FL/Fl.H>
 
-void parse_and_append_ansi(hazel_ctx_t* ctx, const char* text) {
-    // For now, strip ANSI colors and just append raw text.
-    // We will implement the full dynamic style cache in the next iteration.
-    char* clean = strdup(text);
-    char* src = clean;
-    char* dst = clean;
-    while (*src) {
-        if (*src == '\x1b' && *(src + 1) == '[') {
-            while (*src && *src != 'm') src++;
-            if (*src == 'm') src++;
-            continue;
-        }
-        *dst++ = *src++;
-    }
-    *dst = '\0';
-    if (strlen(clean) > 0) {
-        hazel_append_output(ctx, clean, 0);
-    }
-    free(clean);
-}
+
 
 void my_eval_engine(const char* input, hazel_ctx_t* ctx, void* user_data) {
     // Copy the input into a mutable buffer for skred_command
@@ -36,7 +17,7 @@ void my_eval_engine(const char* input, hazel_ctx_t* ctx, void* user_data) {
     // Check if the engine had anything to say
     char* log = skred_log();
     if (log && strlen(log) > 0) {
-        parse_and_append_ansi(ctx, log);
+        hazel_append_output(ctx, log, 0);
     }
     
     // Optional: append return code if > 0 (as seen in mini-skred.c)

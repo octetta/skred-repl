@@ -42,6 +42,9 @@ public:
     void setHighestModifiedPos(int pos) { highest_modified_pos_ = pos; }
     void setPendingStyle(char s) { pending_style_ = s; }
     char getPendingStyle() const { return pending_style_; }
+    bool isOutputStyle(char s) const {
+        return s != 'A' && s != 'D' && s != 0;
+    }
     void loadFile(const char* filepath);
     void saveFileAs(const char* filepath);
     void updateStatusBar();
@@ -76,7 +79,9 @@ private:
     void* user_data_;
     
     
-    Fl_Text_Display::Style_Table_Entry styletable_[4];
+    Fl_Text_Display::Style_Table_Entry styletable_[256];
+    int next_style_index_ = 4;
+    char getAnsiStyle(unsigned int fg, unsigned int bg, bool is_error);
     hazel_config_t config_;
     void applyConfig();
 };

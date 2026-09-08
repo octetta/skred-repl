@@ -133,7 +133,7 @@ int HazelEditor::handle(int event) {
                 if (buffer()->selection_position(&start, &end)) {
                     for (int i = start; i < end; i++) {
                         char s = app_->getStyleAt(i);
-                        if (s == 'B' || s == 'C') return 1;
+                        if (app_->isOutputStyle(s)) return 1;
                     }
                 }
             } else {
@@ -141,21 +141,21 @@ int HazelEditor::handle(int event) {
                 if (key == FL_BackSpace) {
                     if (pos > 0) {
                         char s = app_->getStyleAt(pos - 1);
-                        if (s == 'B' || s == 'C') return 1;
+                        if (app_->isOutputStyle(s)) return 1;
                     }
                 } else if (key == FL_Delete) {
                     if (pos < buffer()->length()) {
                         char s = app_->getStyleAt(pos);
-                        if (s == 'B' || s == 'C') return 1;
+                        if (app_->isOutputStyle(s)) return 1;
                     }
                 } else {
                     if (pos > 0) {
                         char prev = app_->getStyleAt(pos - 1);
                         char curr = app_->getStyleAt(pos);
-                        if ((prev == 'B' || prev == 'C') && (curr == 'B' || curr == 'C')) return 1;
+                        if (app_->isOutputStyle(prev) && app_->isOutputStyle(curr)) return 1;
                     } else {
                         char curr = app_->getStyleAt(pos);
-                        if (curr == 'B' || curr == 'C') return 1;
+                        if (app_->isOutputStyle(curr)) return 1;
                     }
                 }
             }
@@ -222,7 +222,7 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     editor_ = new HazelEditor(0, 0, 800, 575, this);
     editor_->buffer(buffer_);
     editor_->box(FL_FLAT_BOX);
-    editor_->highlight_data(style_buffer_, styletable_, 4, 'A', 0, 0);
+    editor_->highlight_data(style_buffer_, styletable_, next_style_index_, 'A', 0, 0);
     
     status_bar_ = new Fl_Box(0, 575, 800, 25, "");
     status_bar_->box(FL_FLAT_BOX);
@@ -334,7 +334,7 @@ void HazelApp::saveFileAs(const char* filepath) {
             fprintf(f, "```hazel\n%s", text);
             if (len == 0 || text[len-1] != '\n') fprintf(f, "\n");
             fprintf(f, "```\n");
-        } else if (current_style == 'B' || current_style == 'C') {
+        } else if (isOutputStyle(current_style)) {
             fprintf(f, "```output\n%s", text);
             if (len == 0 || text[len-1] != '\n') fprintf(f, "\n");
             fprintf(f, "```\n");
@@ -397,7 +397,7 @@ void HazelApp::evaluateCurrentBlock() {
     int output_end = end;
     while (output_end < buffer_->length()) {
         char s = style_buffer_->char_at(output_end);
-        if (s == 'B' || s == 'C') {
+        if (isOutputStyle(s)) {
             output_end++;
         } else {
             break;
@@ -578,7 +578,7 @@ void HazelEditor::draw() {
                 else p = 'A';
             }
             
-            if (p == 'D' || p == 'B' || p == 'C') {
+            if (p == 'D' || app_->isOutputStyle(p)) {
                 int cx, cy;
                 if (position_to_xy(pos, &cx, &cy)) {
                     if (p == 'D') fl_color(fl_rgb_color(240, 255, 240));
@@ -613,8 +613,7 @@ void HazelApp::updateStatusBar() {
     
     const char* mode = "Code";
     if (style == 'D') mode = "Markdown";
-    else if (style == 'B') mode = "Output";
-    else if (style == 'C') mode = "Error";
+    else if (isOutputStyle(style)) mode = "Output";
     
     const char* fname = current_filepath_.empty() ? "Untitled" : current_filepath_.c_str();
     const char* slash = strrchr(fname, '/');
@@ -657,7 +656,7 @@ void HazelApp::setConfig(const hazel_config_t* config) {
     config_ = *config;
     applyConfig();
     if (editor_) {
-        editor_->highlight_data(style_buffer_, styletable_, 4, 'A', 0, 0);
+        editor_->highlight_data(style_buffer_, styletable_, next_style_index_, 'A', 0, 0);
         editor_->textfont(config_.font);
         editor_->textsize(config_.font_size);
         editor_->redraw();
