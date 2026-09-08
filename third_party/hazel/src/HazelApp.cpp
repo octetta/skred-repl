@@ -823,7 +823,7 @@ void HazelApp::updateStatusBar() {
     if (slash) fname = slash + 1;
     
     char status[512];
-    snprintf(status, sizeof(status), " %s%s  |  Ln %d, Col %d  |  %s  |  [Ctrl+, Prefs] [Ctrl+Enter Eval] [Ctrl+R RunAll] [Ctrl+Q Quit]", 
+    snprintf(status, sizeof(status), " %s%s  |  Ln %d, Col %d  |  %s  |  ^, Pref  ^RET Eval  ^R RunAll  ^Y Code  ^U Mkdn  ^Q Quit", 
              fname, is_dirty_ ? "*" : "", line, col, mode_with_idx);
     
     if (!status_bar_->label() || strcmp(status, status_bar_->label()) != 0) {
