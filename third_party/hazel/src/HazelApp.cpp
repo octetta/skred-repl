@@ -682,6 +682,22 @@ void HazelEditor::draw() {
     int y_start = this->y();
     int y_end = this->y() + this->h();
     
+    auto getEffectiveStyleAt = [&](int p) -> char {
+        if (p < 0) return 'A';
+        int l_start = buffer()->line_start(p);
+        int l_end = buffer()->line_end(p);
+        if (l_start == l_end) {
+            if (p == insert_position() && app_->getPendingStyle() != 0) return app_->getPendingStyle();
+            char p_prev = (p > 0) ? app_->getStyleAt(p - 1) : '\0';
+            char p_curr = app_->getStyleAt(p);
+            if (p_prev == 'A' || p_prev == 'D') return p_prev;
+            if (p_curr == 'A' || p_curr == 'D') return p_curr;
+            return 'A';
+        }
+        char s = app_->getStyleAt(p);
+        return s == 0 ? 'A' : s;
+    };
+    
     // Iterate over visible screen space to find empty lines
     for (int y = y_start; y < y_end; y += height) {
         int pos = xy_to_position(this->x() + this->linenumber_width(), y);
@@ -691,18 +707,7 @@ void HazelEditor::draw() {
         int line_end = buffer()->line_end(pos);
         
         if (line_start == line_end) {
-            // It's an empty line!
-            char p = 0;
-            if (pos == insert_position() && app_->getPendingStyle() != 0) {
-                p = app_->getPendingStyle();
-            } else {
-                char prev = (pos > 0) ? app_->getStyleAt(pos - 1) : '\0';
-                char curr = app_->getStyleAt(pos);
-                if (prev == 'A' || prev == 'D') p = prev;
-                else if (curr == 'A' || curr == 'D') p = curr;
-                else p = 'A';
-            }
-            
+            char p = getEffectiveStyleAt(pos);
             if (p == 'D' || app_->isOutputStyle(p)) {
                 int cx, cy;
                 if (position_to_xy(pos, &cx, &cy)) {
@@ -712,7 +717,6 @@ void HazelEditor::draw() {
                     
                     fl_rectf(margin_x, cy, width, height);
                     
-                    // Only draw fake cursor if this is the actual cursor position
                     if (pos == insert_position()) {
                         fl_color(FL_BLACK);
                         fl_rectf(cx, cy, 2, height);
@@ -723,9 +727,9 @@ void HazelEditor::draw() {
     }
     
     // Draw Custom Cell Badges in Margin
-    int m_width = 40; // linenumber_width
+    int m_width = 40;
     int m_x = this->x();
-    fl_color(fl_rgb_color(230, 230, 230)); // margin background
+    fl_color(fl_rgb_color(230, 230, 230)); 
     fl_rectf(m_x, y_start, m_width, y_end - y_start);
     
     auto getBlockType = [&](char s) {
@@ -743,22 +747,18 @@ void HazelEditor::draw() {
         
         int line_start = buffer()->line_start(pos);
         if (pos == line_start) { // First char of the line
-            char curr = app_->getStyleAt(line_start);
-            char prev = (line_start > 0) ? app_->getStyleAt(line_start - 1) : '\0';
-            if (curr == 0) curr = 'A';
+            char curr = getEffectiveStyleAt(line_start);
+            char prev = (line_start > 0) ? getEffectiveStyleAt(line_start - 1) : '\0';
             if (prev == 0) prev = 'A';
             
             int curr_type = getBlockType(curr);
             int prev_type = getBlockType(prev);
             
-            // If it's the very first line of the document OR the cell type changed
             if (line_start == 0 || curr_type != prev_type) {
-                // Count how many blocks of this type preceded this one to get index
                 int block_idx = 1;
                 char scan_curr = '\0';
                 for (int i = 0; i < line_start; i++) {
-                    char s = app_->getStyleAt(i);
-                    if (s == 0) s = 'A';
+                    char s = getEffectiveStyleAt(i);
                     int t = getBlockType(s);
                     if (t != getBlockType(scan_curr)) {
                         if (t == curr_type) block_idx++;
