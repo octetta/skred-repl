@@ -745,7 +745,7 @@ void HazelApp::finishEvaluation(hazel_ctx_t* ctx) {
             char s = getStyleAt(search);
             if (s == 'A' || s == 'D') {
                 editor_->insert_position(search);
-                
+                editor_->show_insert_position();
                 break;
             }
             search++;
