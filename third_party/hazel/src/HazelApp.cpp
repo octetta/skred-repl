@@ -790,8 +790,6 @@ void HazelApp::finishEvaluation(hazel_ctx_t* ctx) {
             run_all_pending_ = false;
         }
     }
-    
-    delete ctx;
 }
 
 void HazelEditor::draw() {
