@@ -26,7 +26,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fltk)
 
 add_library(hazel
-    src/HazelApp.cpp
+    src/HazelApp.cpp 
     src/api.cpp
 )
 

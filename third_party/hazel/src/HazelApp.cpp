@@ -1,4 +1,5 @@
 #include "HazelApp.h"
+#include "FontPicker.h"
 #include <FL/Fl.H>
 #include <FL/Fl_Native_File_Chooser.H>
 #include <iostream>
@@ -115,6 +116,19 @@ int HazelEditor::handle(int event) {
             } else {
                 app_->setPendingStyle('A');
                 this->redraw();
+            }
+            return 1;
+        }
+        
+        // Font Picker
+        if (key == 'f' && (Fl::event_state() & FL_CTRL)) {
+            SimpleFontPicker picker;
+            std::string font = picker.getSelectedFont();
+            if (!font.empty()) {
+                Fl::set_font(FL_FREE_FONT, font.c_str());
+                hazel_config_t cfg = app_->getConfig();
+                cfg.font = FL_FREE_FONT;
+                app_->setConfig(&cfg);
             }
             return 1;
         }
@@ -709,13 +723,30 @@ void HazelApp::updateStatusBar() {
     if (style == 'D') mode = "Markdown";
     else if (isOutputStyle(style)) mode = "Output";
     
+    int block_idx = 0;
+    char current_block = '\0';
+    char target_block = isOutputStyle(style) ? 'B' : style;
+    for (int i = 0; i < pos; i++) {
+        char s = getStyleAt(i);
+        if (isOutputStyle(s)) s = 'B';
+        if (s != current_block) {
+            if (s == target_block) block_idx++;
+            current_block = s;
+        }
+    }
+    if (block_idx == 0) block_idx = 1;
+    if (pos == 0) block_idx = 1;
+
+    char mode_with_idx[64];
+    snprintf(mode_with_idx, sizeof(mode_with_idx), "%s#%d", mode, block_idx);
+    
     const char* fname = current_filepath_.empty() ? "Untitled" : current_filepath_.c_str();
     const char* slash = strrchr(fname, '/');
     if (slash) fname = slash + 1;
     
     char status[256];
     snprintf(status, sizeof(status), " %s%s  |  Ln %d, Col %d  |  %s", 
-             fname, is_dirty_ ? "*" : "", line, col, mode);
+             fname, is_dirty_ ? "*" : "", line, col, mode_with_idx);
     
     if (!status_bar_->label() || strcmp(status, status_bar_->label()) != 0) {
         status_bar_->copy_label(status);

@@ -53,6 +53,7 @@ public:
     bool isDirty() const { return is_dirty_; }
     void tryQuit();
     void setConfig(const hazel_config_t* config);
+    const hazel_config_t& getConfig() const { return config_; }
     
     void evaluateCurrentBlock();
     char getStyleAt(int pos);
