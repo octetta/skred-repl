@@ -6,7 +6,23 @@
 
 
 void TerminalPane::style_update_cb(int pos, int nInserted, int nDeleted, int nRestyled, const char* deletedText, void* cbArg) {
-    // No-op for now, just required for FLTK style buffers
+    TerminalPane* term = (TerminalPane*)cbArg;
+    
+    if (nInserted == 0 && nDeleted == 0) {
+        term->style_buf_->unselect();
+        return;
+    }
+    
+    if (nDeleted > 0) {
+        term->style_buf_->remove(pos, pos + nDeleted);
+    }
+    
+    if (nInserted > 0) {
+        std::string s(nInserted, 'A');
+        term->style_buf_->insert(pos, s.c_str());
+    }
+    
+    term->style_buf_->unselect();
 }
 
 TerminalPane::TerminalPane(int X, int Y, int W, int H, HazelApp* app) 
@@ -17,17 +33,15 @@ TerminalPane::TerminalPane(int X, int Y, int W, int H, HazelApp* app)
     
     this->buffer(buf_);
     this->box(FL_FLAT_BOX);
-    this->color(FL_BLACK); // Classic terminal look
-    this->textcolor(FL_WHITE);
-    this->textfont(FL_COURIER);
-    this->textsize(14);
-    this->cursor_color(FL_WHITE);
+    this->color(app->config_.input_bg); // Match code cells
+    this->textcolor(app->config_.text_fg);
+    this->textfont(app->config_.font);
+    this->textsize(app->config_.font_size);
+    this->cursor_color(app->config_.text_fg);
     this->cursor_style(Fl_Text_Display::BLOCK_CURSOR);
     
+    this->highlight_data(style_buf_, app_->styletable_, app_->next_style_index_, 'A', 0, 0);
     buf_->add_modify_callback(style_update_cb, this);
-    
-    // We could use highlight_data to style errors in red, etc.
-    // For now, pure monochrome text works, or we can just use the FLTK styles.
     
     printPrompt();
 }
@@ -42,6 +56,8 @@ void TerminalPane::printPrompt() {
     buf_->remove_modify_callback(style_update_cb, this);
     int p = buf_->length();
     buf_->insert(p, prompt);
+    std::string s(strlen(prompt), 'D');
+    style_buf_->insert(p, s.c_str());
     buf_->add_modify_callback(style_update_cb, this);
     
     prompt_pos_ = buf_->length();
@@ -53,11 +69,13 @@ void TerminalPane::appendOutput(const char* text, bool is_error) {
     if (!text || strlen(text) == 0) return;
     buf_->remove_modify_callback(style_update_cb, this);
     int p = buf_->length();
-    buf_->insert(p, text);
     
-    if (text[strlen(text)-1] != '\n') {
-        buf_->insert(buf_->length(), "\n");
-    }
+    std::string clean_text = text;
+    if (clean_text.back() != '\n') clean_text += '\n';
+    
+    buf_->insert(p, clean_text.c_str());
+    std::string s(clean_text.length(), is_error ? 'B' : 'C');
+    style_buf_->insert(p, s.c_str());
     buf_->add_modify_callback(style_update_cb, this);
     
     prompt_pos_ = buf_->length(); // advance prompt pos
@@ -66,6 +84,7 @@ void TerminalPane::appendOutput(const char* text, bool is_error) {
 }
 
 void TerminalPane::evaluateCommand() {
+    printf("EVAL 1\n"); fflush(stdout);
     int len = buf_->length() - prompt_pos_;
     if (len < 0) len = 0;
     char* cmd = buf_->text_range(prompt_pos_, buf_->length());
@@ -79,7 +98,9 @@ void TerminalPane::evaluateCommand() {
     
     // Echo newline
     buf_->remove_modify_callback(style_update_cb, this);
-    buf_->insert(buf_->length(), "\n");
+    int p = buf_->length();
+    buf_->insert(p, "\n");
+    style_buf_->insert(p, "A");
     buf_->add_modify_callback(style_update_cb, this);
     
     // Evaluate via engine
@@ -89,9 +110,13 @@ void TerminalPane::evaluateCommand() {
     ctx.at_bottom = true;
     ctx.is_terminal = true;
     
+    printf("EVAL 2\n"); fflush(stdout);
     app_->evaluateCommand(cmd, &ctx);
+    printf("EVAL 3\n"); fflush(stdout);
     
+    printf("EVAL 4\n"); fflush(stdout);
     free(cmd);
+    printf("EVAL 5\n"); fflush(stdout);
     
     printPrompt();
 }
@@ -114,7 +139,10 @@ int TerminalPane::handle(int event) {
             if (history_index_ > 0) {
                 history_index_--;
                 buf_->remove(prompt_pos_, buf_->length());
+                style_buf_->remove(prompt_pos_, style_buf_->length());
                 buf_->insert(prompt_pos_, history_[history_index_].c_str());
+                std::string s(history_[history_index_].length(), 'A');
+                style_buf_->insert(prompt_pos_, s.c_str());
                 insert_position(buf_->length());
             }
             return 1;
@@ -122,11 +150,15 @@ int TerminalPane::handle(int event) {
             if (history_index_ + 1 < history_.size()) {
                 history_index_++;
                 buf_->remove(prompt_pos_, buf_->length());
+                style_buf_->remove(prompt_pos_, style_buf_->length());
                 buf_->insert(prompt_pos_, history_[history_index_].c_str());
+                std::string s(history_[history_index_].length(), 'A');
+                style_buf_->insert(prompt_pos_, s.c_str());
                 insert_position(buf_->length());
             } else if (history_index_ + 1 == history_.size()) {
                 history_index_++;
                 buf_->remove(prompt_pos_, buf_->length());
+                style_buf_->remove(prompt_pos_, style_buf_->length());
                 insert_position(buf_->length());
             }
             return 1;

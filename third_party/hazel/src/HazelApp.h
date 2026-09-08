@@ -22,6 +22,7 @@ private:
 };
 
 class HazelApp {
+    friend class TerminalPane;
 public:
     HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data);
     ~HazelApp();
