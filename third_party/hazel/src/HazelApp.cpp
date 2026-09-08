@@ -796,6 +796,7 @@ void HazelEditor::draw() {
     
     int margin_x = this->x() + this->linenumber_width();
     int width = this->w() - this->linenumber_width();
+    if (mVScrollBar && mVScrollBar->visible()) width -= mVScrollBar->w();
     int height = this->textsize() + 6; 
     
     int y_start = this->y();
@@ -891,7 +892,11 @@ void HazelEditor::draw() {
                 if (position_to_xy(line_start, &cx, &cy)) {
                     if (line_start > 0) {
                         fl_color(FL_BLACK);
-                        fl_line(m_x, cy, this->x() + this->w(), cy);
+                        int line_w = this->w();
+                        if (mVScrollBar && mVScrollBar->visible()) {
+                            line_w -= mVScrollBar->w();
+                        }
+                        fl_line(m_x, cy, this->x() + line_w, cy);
                     }
                     fl_color(fl_rgb_color(150, 150, 150));
                     fl_draw(badge, m_x + 4, cy + height - 4);
