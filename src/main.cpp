@@ -16,10 +16,10 @@ int my_load_cb(hazel_app_t* app, const char* filepath, void* user_data) {
     
     char line[2048];
     while (fgets(line, sizeof(line), f)) {
-        if (strncmp(line, "## ", 3) == 0) {
-            hazel_append_block(app, 'D', line + 3);
-        } else if (strncmp(line, "##\n", 3) == 0) {
-            hazel_append_block(app, 'D', "\n");
+        if (line[0] == '#') {
+            char* text = line + 1;
+            if (text[0] == ' ') text++;
+            hazel_append_block(app, 'D', text);
         } else {
             hazel_append_block(app, 'A', line);
         }
@@ -51,7 +51,7 @@ int my_save_cb(hazel_app_t* app, const char* filepath, void* user_data) {
             if (current_style == 'D') {
                 bool new_line = true;
                 for (int i = block_start; i < end_pos; i++) {
-                    if (new_line) { fprintf(f, "## "); new_line = false; }
+                    if (new_line) { fprintf(f, "# "); new_line = false; }
                     fprintf(f, "%c", text[i]);
                     if (text[i] == '\n') new_line = true;
                 }
