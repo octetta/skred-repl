@@ -34,6 +34,7 @@ private:
 
 class HazelApp {
     friend class TerminalPane;
+    friend class StatusBar;
 public:
     HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data);
     ~HazelApp();
@@ -98,7 +99,7 @@ private:
     HazelEditor* editor_;
     Fl_Text_Buffer* buffer_;
     Fl_Text_Buffer* style_buffer_;
-    Fl_Box* status_bar_;
+    class StatusBar* status_bar_;
     class TerminalPane* terminal_;
     class Splitter* splitter_;
     int terminal_height_ = 0;

@@ -6,6 +6,85 @@
 #include <iostream>
 #include <FL/Fl_Box.H>
 
+#include <FL/fl_draw.H>
+
+class StatusBar : public Fl_Box {
+    HazelApp* app_;
+public:
+    StatusBar(int X, int Y, int W, int H, HazelApp* app) : Fl_Box(X, Y, W, H, ""), app_(app) {
+        align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+        box(FL_FLAT_BOX);
+    }
+    
+    void drawKey(int& cur_x, int cur_y, const char* mod, const char* key, const char* label) {
+        fl_font(FL_HELVETICA_BOLD, 10);
+        
+        // Mod (e.g. CTRL)
+        int mod_w = 0, mod_h = 0;
+        fl_measure(mod, mod_w, mod_h);
+        mod_w += 10;
+        
+        fl_color(FL_DARK3);
+        fl_rectf(cur_x, cur_y + 4, mod_w, 16);
+        fl_color(FL_WHITE);
+        fl_draw(mod, cur_x + 5, cur_y + 16);
+        cur_x += mod_w + 2;
+        
+        // Key
+        int key_w = 0, key_h = 0;
+        fl_measure(key, key_w, key_h);
+        key_w += 10;
+        
+        fl_color(FL_DARK3);
+        fl_rectf(cur_x, cur_y + 4, key_w, 16);
+        fl_color(FL_WHITE);
+        fl_draw(key, cur_x + 5, cur_y + 16);
+        cur_x += key_w + 6;
+        
+        // Label
+        fl_font(FL_HELVETICA, 12);
+        fl_color(FL_BLACK);
+        int lbl_w = 0, lbl_h = 0;
+        fl_measure(label, lbl_w, lbl_h);
+        fl_draw(label, cur_x, cur_y + 17);
+        cur_x += lbl_w + 12;
+    }
+    
+    void draw() override {
+        Fl_Box::draw();
+        
+        int cur_x = x() + 10;
+        int cur_y = y();
+        
+        fl_font(FL_HELVETICA_BOLD, 12);
+        fl_color(FL_BLACK);
+        std::string filename = app_->isDirty() ? "* " : "";
+        filename += app_->current_filepath_.empty() ? "Untitled" : app_->current_filepath_;
+        
+        fl_draw(filename.c_str(), cur_x, cur_y + 17);
+        
+        int fw = 0, fh = 0;
+        fl_measure(filename.c_str(), fw, fh);
+        cur_x += fw + 15;
+        
+        fl_color(fl_rgb_color(200, 200, 200));
+        fl_line(cur_x, cur_y + 4, cur_x, cur_y + 20);
+        cur_x += 15;
+        
+        #ifdef __APPLE__
+        const char* cmd = "CMD";
+        #else
+        const char* cmd = "CTRL";
+        #endif
+        
+        drawKey(cur_x, cur_y, cmd, "Y", "Code");
+        drawKey(cur_x, cur_y, cmd, "U", "Markdown");
+        drawKey(cur_x, cur_y, cmd, "~", "Terminal");
+        drawKey(cur_x, cur_y, cmd, "D", "Delete");
+        drawKey(cur_x, cur_y, cmd, ",", "Prefs");
+    }
+};
+
 class Splitter : public Fl_Box {
     HazelApp* app_;
     int drag_start_y_;
@@ -427,10 +506,8 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     splitter_ = new Splitter(0, 400, 800, 4, this);
     splitter_->hide();
     
-    status_bar_ = new Fl_Box(0, 575, 800, 25, "");
-    status_bar_->box(FL_FLAT_BOX);
+    status_bar_ = new StatusBar(0, 575, 800, 25, this);
     status_bar_->color(FL_LIGHT2);
-    status_bar_->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
     
     win_->resizable(win_);
     win_->callback([](Fl_Widget*, void* v){ ((HazelApp*)v)->tryQuit(); }, this);
