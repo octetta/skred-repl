@@ -848,10 +848,10 @@ void HazelEditor::draw() {
         int l_end = buffer()->line_end(p);
         if (l_start == l_end) {
             if (p == insert_position() && app_->getPendingStyle() != 0) return app_->getPendingStyle();
-            char p_prev = (p > 0) ? app_->getStyleAt(p - 1) : '\0';
             char p_curr = app_->getStyleAt(p);
-            if (p_prev == 'A' || p_prev == 'D') return p_prev;
-            if (p_curr == 'A' || p_curr == 'D') return p_curr;
+            if (p_curr == 'A' || p_curr == 'D' || p_curr == 'C' || p_curr == 'B') return p_curr;
+            char p_prev = (p > 0) ? app_->getStyleAt(p - 1) : '\0';
+            if (p_prev == 'A' || p_prev == 'D' || p_prev == 'C' || p_prev == 'B') return p_prev;
             return 'A';
         }
         char s = app_->getStyleAt(p);
