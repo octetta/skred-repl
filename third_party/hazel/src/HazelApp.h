@@ -47,6 +47,8 @@ public:
     void saveFile();
     void promptSaveAs();
     void toggleTerminal();
+    int getTerminalHeight() const { return terminal_height_; }
+    void setTerminalHeight(int h);
     void layoutWidgets(int W, int H);
     class TerminalPane* getTerminal() { return terminal_; }
     void evaluateCommand(const char* cmd, hazel_ctx_t* ctx);
@@ -98,6 +100,8 @@ private:
     Fl_Text_Buffer* style_buffer_;
     Fl_Box* status_bar_;
     class TerminalPane* terminal_;
+    class Splitter* splitter_;
+    int terminal_height_ = 0;
     std::string current_filepath_;
     bool is_dirty_;
     

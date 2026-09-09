@@ -4,6 +4,40 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Native_File_Chooser.H>
 #include <iostream>
+#include <FL/Fl_Box.H>
+
+class Splitter : public Fl_Box {
+    HazelApp* app_;
+    int drag_start_y_;
+    int drag_start_term_h_;
+public:
+    Splitter(int X, int Y, int W, int H, HazelApp* app) : Fl_Box(X, Y, W, H), app_(app) {
+        box(FL_FLAT_BOX);
+        color(fl_rgb_color(200, 200, 200));
+    }
+    int handle(int event) override {
+        if (event == FL_ENTER) {
+            window()->cursor(FL_CURSOR_NS);
+            return 1;
+        } else if (event == FL_LEAVE) {
+            window()->cursor(FL_CURSOR_DEFAULT);
+            return 1;
+        } else if (event == FL_PUSH) {
+            drag_start_y_ = Fl::event_y();
+            drag_start_term_h_ = app_->getTerminalHeight();
+            return 1;
+        } else if (event == FL_DRAG) {
+            int dy = Fl::event_y() - drag_start_y_;
+            app_->setTerminalHeight(drag_start_term_h_ - dy);
+            return 1;
+        } else if (event == FL_RELEASE) {
+            window()->cursor(FL_CURSOR_DEFAULT);
+            return 1;
+        }
+        return Fl_Box::handle(event);
+    }
+};
+
 #include <string.h>
 
 
@@ -390,6 +424,8 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     
     terminal_ = new TerminalPane(0, 400, 800, 175, this);
     terminal_->hide();
+    splitter_ = new Splitter(0, 400, 800, 4, this);
+    splitter_->hide();
     
     status_bar_ = new Fl_Box(0, 575, 800, 25, "");
     status_bar_->box(FL_FLAT_BOX);
@@ -1122,6 +1158,15 @@ void HazelWindow::resize(int X, int Y, int W, int H) {
     if (app_) app_->layoutWidgets(W, H);
 }
 
+void HazelApp::setTerminalHeight(int h) {
+    int max_h = win_->h() - status_bar_->h() - 100;
+    if (h > max_h) h = max_h;
+    if (h < 50) h = 50;
+    terminal_height_ = h;
+    layoutWidgets(win_->w(), win_->h());
+    win_->redraw();
+}
+
 void HazelApp::layoutWidgets(int W, int H) {
     int status_h = 25;
     status_bar_->resize(0, H - status_h, W, status_h);
@@ -1138,9 +1183,11 @@ void HazelApp::layoutWidgets(int W, int H) {
 void HazelApp::toggleTerminal() {
     if (terminal_->visible()) {
         terminal_->hide();
+        splitter_->hide();
         editor_->take_focus();
     } else {
         terminal_->show();
+        splitter_->show();
         terminal_->take_focus();
     }
     layoutWidgets(win_->w(), win_->h());
