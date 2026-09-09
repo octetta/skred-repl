@@ -82,6 +82,7 @@ public:
         
         drawKeyRight(right_x, cur_y, cmd, ",", "Prefs");
         drawKeyRight(right_x, cur_y, cmd, "D", "Delete");
+        drawKeyRight(right_x, cur_y, "ALT", "RET", "Split");
         drawKeyRight(right_x, cur_y, cmd, "~", "Terminal");
         drawKeyRight(right_x, cur_y, cmd, "U", "Markdown");
         drawKeyRight(right_x, cur_y, cmd, "Y", "Code");
