@@ -1184,9 +1184,13 @@ void HazelApp::layoutWidgets(int W, int H) {
 
 void HazelApp::toggleTerminal() {
     if (terminal_->visible()) {
-        terminal_->hide();
-        splitter_->hide();
-        editor_->take_focus();
+        if (Fl::focus() == terminal_) {
+            terminal_->hide();
+            splitter_->hide();
+            editor_->take_focus();
+        } else {
+            terminal_->take_focus();
+        }
     } else {
         terminal_->show();
         splitter_->show();

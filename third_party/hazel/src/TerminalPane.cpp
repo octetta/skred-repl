@@ -127,7 +127,10 @@ int TerminalPane::handle(int event) {
             return 1;
         }
         
-        if (key == FL_Enter || key == FL_KP_Enter) {
+        if (key == FL_Escape) {
+            app_->getEditor()->take_focus();
+            return 1;
+        } else if (key == FL_Enter || key == FL_KP_Enter) {
             evaluateCommand();
             return 1;
         } else if (key == FL_Up) {
