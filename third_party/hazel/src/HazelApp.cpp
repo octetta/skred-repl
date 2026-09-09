@@ -85,7 +85,13 @@ int HazelEditor::handle(int event) {
                 pos = pos - 1;
                 style = 'A';
             }
-            if (style == 'A') {
+            if (buffer()->selected()) {
+                int start, end;
+                buffer()->selection_position(&start, &end);
+                std::string new_styles(end - start, 'D');
+                app_->getStyleBuffer()->replace(start, end, new_styles.c_str());
+                this->redisplay_range(start, end);
+            } else if (style == 'A') {
                 int start = pos;
                 while (start > 0 && app_->getStyleAt(start - 1) == style) start--;
                 int end = pos;
@@ -109,7 +115,13 @@ int HazelEditor::handle(int event) {
                 pos = pos - 1;
                 style = 'D';
             }
-            if (style == 'D') {
+            if (buffer()->selected()) {
+                int start, end;
+                buffer()->selection_position(&start, &end);
+                std::string new_styles(end - start, 'A');
+                app_->getStyleBuffer()->replace(start, end, new_styles.c_str());
+                this->redisplay_range(start, end);
+            } else if (style == 'D') {
                 int start = pos;
                 while (start > 0 && app_->getStyleAt(start - 1) == style) start--;
                 int end = pos;
@@ -122,6 +134,27 @@ int HazelEditor::handle(int event) {
                 app_->setPendingStyle('A');
                 this->redraw();
             }
+            return 1;
+        }
+        
+        // Split Cell (Alt+Enter)
+        if ((key == FL_Enter || key == FL_KP_Enter) && (Fl::event_state() & FL_ALT)) {
+            int pos = insert_position();
+            char current_style = app_->getStyleAt(pos);
+            if (current_style == 'C' || current_style == 'B') return 1; // Don't split output
+            
+            char new_style = (current_style == 'A') ? 'D' : 'A';
+            
+            buffer()->remove_modify_callback(style_update_cb, app_);
+            buffer()->insert(pos, "\n\n");
+            
+            std::string s(2, new_style);
+            app_->getStyleBuffer()->insert(pos, s.c_str());
+            
+            buffer()->add_modify_callback(style_update_cb, app_);
+            
+            insert_position(pos + 1);
+            show_insert_position();
             return 1;
         }
         
