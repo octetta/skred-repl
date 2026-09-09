@@ -56,6 +56,7 @@ public:
     void startRunAll();
     void finishEvaluation(hazel_ctx_t* ctx);
     bool run_all_pending_ = false;
+    std::string status_info_;
     int highest_modified_pos_ = 0;
     char pending_style_ = 0;
     std::string cell_clip_text_;

@@ -511,6 +511,7 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     
     status_bar_ = new StatusBar(0, 575, 800, 25, this);
     status_bar_->color(FL_LIGHT2);
+    status_bar_->label("");
     
     win_->resizable(win_);
     win_->callback([](Fl_Widget*, void* v){ ((HazelApp*)v)->tryQuit(); }, this);
@@ -1150,16 +1151,11 @@ void HazelApp::updateStatusBar() {
     if (slash) fname = slash + 1;
     
     char status[512];
-    snprintf(status, sizeof(status), " %s%s  |  Ln %d, Col %d  |  %s  |  ^, Pref  ^RET Eval  ^R RunAll  ^Y Code  ^U Mkdn  ^Q Quit", 
+    snprintf(status, sizeof(status), " %s%s  |  Ln %d, Col %d  |  %s", 
              fname, is_dirty_ ? "*" : "", line, col, mode_with_idx);
     
-    // Quick patch to add ^~ Term to the status bar cheat sheet
-    std::string s(status);
-    s = s.replace(s.find("Quit"), 4, "Quit  ^` Term");
-    snprintf(status, sizeof(status), "%s", s.c_str());
-    
-    if (!status_bar_->label() || strcmp(status, status_bar_->label()) != 0) {
-        status_bar_->copy_label(status);
+    if (status_info_ != status) {
+        status_info_ = status;
         status_bar_->redraw();
     }
 }
