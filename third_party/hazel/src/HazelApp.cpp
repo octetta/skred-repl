@@ -147,8 +147,8 @@ static void style_update_cb(int pos, int nInserted, int nDeleted, int nRestyled,
             target_style = app->getPendingStyle();
             app->setPendingStyle(0);
         } else {
-            if (prev == 'A' || prev == 'D') target_style = prev;
-            else if (curr == 'A' || curr == 'D') target_style = curr;
+            if (curr == 'A' || curr == 'D') target_style = curr;
+            else if (prev == 'A' || prev == 'D') target_style = prev;
         }
         
         std::string styles(nInserted, target_style);
