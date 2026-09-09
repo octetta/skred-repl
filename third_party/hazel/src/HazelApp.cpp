@@ -220,11 +220,19 @@ int HazelEditor::handle(int event) {
                     if (pos > 0) {
                         char s = app_->getStyleAt(pos - 1);
                         if (app_->isOutputStyle(s)) return 1;
+                        
+                        char curr = app_->getStyleAt(pos);
+                        if (curr != 0 && s != 0 && curr != s) return 1; // Prevent merging different cell types
                     }
                 } else if (key == FL_Delete) {
                     if (pos < buffer()->length()) {
                         char s = app_->getStyleAt(pos);
                         if (app_->isOutputStyle(s)) return 1;
+                        
+                        if (pos > 0) {
+                            char prev = app_->getStyleAt(pos - 1);
+                            if (prev != 0 && s != 0 && prev != s) return 1; // Prevent merging different cell types
+                        }
                     }
                 } else {
                     if (pos > 0) {
