@@ -348,9 +348,11 @@ int HazelEditor::handle(int event) {
             if (buffer()->selected()) {
                 int start, end;
                 if (buffer()->selection_position(&start, &end)) {
+                    char first_s = app_->getStyleAt(start);
                     for (int i = start; i < end; i++) {
                         char s = app_->getStyleAt(i);
                         if (app_->isOutputStyle(s)) return 1;
+                        if (s != first_s) return 1; // Prevent deleting across multiple cell types
                     }
                 }
             } else {
@@ -361,16 +363,19 @@ int HazelEditor::handle(int event) {
                         if (app_->isOutputStyle(s)) return 1;
                         
                         char curr = app_->getStyleAt(pos);
-                        if (curr != 0 && s != 0 && curr != s) return 1; // Prevent merging different cell types
+                        if (curr != 0 && s != 0 && curr != s) return 1;
+                        
+                        if (buffer()->char_at(pos - 1) == '\n' && pos > 1 && pos < buffer()->length()) {
+                            if (app_->getStyleAt(pos - 2) != app_->getStyleAt(pos)) return 1;
+                        }
                     }
                 } else if (key == FL_Delete) {
                     if (pos < buffer()->length()) {
                         char s = app_->getStyleAt(pos);
                         if (app_->isOutputStyle(s)) return 1;
                         
-                        if (pos > 0) {
-                            char prev = app_->getStyleAt(pos - 1);
-                            if (prev != 0 && s != 0 && prev != s) return 1; // Prevent merging different cell types
+                        if (buffer()->char_at(pos) == '\n' && pos > 0 && pos + 1 < buffer()->length()) {
+                            if (app_->getStyleAt(pos - 1) != app_->getStyleAt(pos + 1)) return 1;
                         }
                     }
                 } else {
