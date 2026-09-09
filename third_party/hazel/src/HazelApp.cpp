@@ -80,11 +80,12 @@ public:
         const char* cmd = "CTRL";
         #endif
         
-        drawKeyRight(right_x, cur_y, cmd, ",", "Prefs");
-        drawKeyRight(right_x, cur_y, cmd, "D", "Delete");
+        drawKeyRight(right_x, cur_y, cmd, "R", "RunAll");
+        drawKeyRight(right_x, cur_y, cmd, "RET", "Eval");
         drawKeyRight(right_x, cur_y, "ALT", "RET", "Split");
+        drawKeyRight(right_x, cur_y, cmd, "D", "Delete");
         drawKeyRight(right_x, cur_y, cmd, "~", "Terminal");
-        drawKeyRight(right_x, cur_y, cmd, "U", "Markdown");
+        drawKeyRight(right_x, cur_y, cmd, "U", "Mkdn");
         drawKeyRight(right_x, cur_y, cmd, "Y", "Code");
     }
 };
