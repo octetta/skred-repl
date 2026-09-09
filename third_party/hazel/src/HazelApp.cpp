@@ -16,38 +16,46 @@ public:
         box(FL_FLAT_BOX);
     }
     
-    void drawKey(int& cur_x, int cur_y, const char* mod, const char* key, const char* label) {
-        fl_font(FL_HELVETICA_BOLD, 10);
+    void drawKeyRight(int& cur_x, int cur_y, const char* mod, const char* key, const char* label) {
+        fl_font(FL_HELVETICA, 12);
+        int lbl_w = 0, lbl_h = 0;
+        fl_measure(label, lbl_w, lbl_h);
         
-        // Mod (e.g. CTRL)
+        fl_font(FL_HELVETICA_BOLD, 10);
         int mod_w = 0, mod_h = 0;
         fl_measure(mod, mod_w, mod_h);
         mod_w += 10;
         
-        fl_color(FL_DARK3);
-        fl_rectf(cur_x, cur_y + 4, mod_w, 16);
-        fl_color(FL_WHITE);
-        fl_draw(mod, cur_x + 5, cur_y + 16);
-        cur_x += mod_w + 2;
-        
-        // Key
         int key_w = 0, key_h = 0;
         fl_measure(key, key_w, key_h);
         key_w += 10;
         
-        fl_color(FL_DARK3);
-        fl_rectf(cur_x, cur_y + 4, key_w, 16);
+        // Advance cur_x leftwards
+        int total_w = mod_w + 2 + key_w + 6 + lbl_w + 12;
+        cur_x -= total_w;
+        
+        int draw_x = cur_x;
+        
+        // Mod (e.g. CTRL)
+        fl_color(FL_BLACK);
+        fl_rectf(draw_x + 1, cur_y + 5, mod_w - 2, 14); // Rounded effect approximation
+        fl_rectf(draw_x, cur_y + 6, mod_w, 12);
         fl_color(FL_WHITE);
-        fl_draw(key, cur_x + 5, cur_y + 16);
-        cur_x += key_w + 6;
+        fl_draw(mod, draw_x + 5, cur_y + 16);
+        draw_x += mod_w + 2;
+        
+        // Key
+        fl_color(FL_BLACK);
+        fl_rectf(draw_x + 1, cur_y + 5, key_w - 2, 14);
+        fl_rectf(draw_x, cur_y + 6, key_w, 12);
+        fl_color(FL_WHITE);
+        fl_draw(key, draw_x + 5, cur_y + 16);
+        draw_x += key_w + 6;
         
         // Label
         fl_font(FL_HELVETICA, 12);
-        fl_color(FL_BLACK);
-        int lbl_w = 0, lbl_h = 0;
-        fl_measure(label, lbl_w, lbl_h);
-        fl_draw(label, cur_x, cur_y + 17);
-        cur_x += lbl_w + 12;
+        fl_color(FL_DARK3);
+        fl_draw(label, draw_x, cur_y + 17);
     }
     
     void draw() override {
@@ -63,13 +71,8 @@ public:
         
         fl_draw(filename.c_str(), cur_x, cur_y + 17);
         
-        int fw = 0, fh = 0;
-        fl_measure(filename.c_str(), fw, fh);
-        cur_x += fw + 15;
-        
-        fl_color(fl_rgb_color(200, 200, 200));
-        fl_line(cur_x, cur_y + 4, cur_x, cur_y + 20);
-        cur_x += 15;
+        // Draw keys starting from the far right edge!
+        int right_x = x() + w() - 10;
         
         #ifdef __APPLE__
         const char* cmd = "CMD";
@@ -77,11 +80,11 @@ public:
         const char* cmd = "CTRL";
         #endif
         
-        drawKey(cur_x, cur_y, cmd, "Y", "Code");
-        drawKey(cur_x, cur_y, cmd, "U", "Markdown");
-        drawKey(cur_x, cur_y, cmd, "~", "Terminal");
-        drawKey(cur_x, cur_y, cmd, "D", "Delete");
-        drawKey(cur_x, cur_y, cmd, ",", "Prefs");
+        drawKeyRight(right_x, cur_y, cmd, ",", "Prefs");
+        drawKeyRight(right_x, cur_y, cmd, "D", "Delete");
+        drawKeyRight(right_x, cur_y, cmd, "~", "Terminal");
+        drawKeyRight(right_x, cur_y, cmd, "U", "Markdown");
+        drawKeyRight(right_x, cur_y, cmd, "Y", "Code");
     }
 };
 
