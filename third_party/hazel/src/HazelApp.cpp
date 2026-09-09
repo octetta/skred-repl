@@ -296,7 +296,8 @@ int HazelEditor::handle(int event) {
             std::string font;
             int theme = 0;
             int size = 15;
-            if (prefs.run(font, theme, size)) {
+            hazel_config_t custom_colors;
+            if (prefs.run(font, theme, size, custom_colors)) {
                 hazel_config_t cfg = app_->getConfig();
                 cfg.font_size = size;
                 if (!font.empty()) {
@@ -322,6 +323,12 @@ int HazelEditor::handle(int event) {
                     cfg.output_bg = fl_rgb_color(15, 15, 20);
                     cfg.error_bg = fl_rgb_color(40, 10, 10);
                     cfg.markdown_bg = fl_rgb_color(20, 30, 25);
+                } else if (theme == 2) { // Custom
+                    cfg.text_fg = custom_colors.text_fg;
+                    cfg.input_bg = custom_colors.input_bg;
+                    cfg.output_bg = custom_colors.output_bg;
+                    cfg.error_bg = custom_colors.error_bg;
+                    cfg.markdown_bg = custom_colors.markdown_bg;
                 }
                 app_->setConfig(&cfg);
                 app_->savePreferences(font, theme, size);
@@ -1301,6 +1308,7 @@ void HazelApp::savePreferences(const std::string& font_name, int theme, int size
         out << font_name << "\n";
         out << theme << "\n";
         out << size << "\n";
+        out << config_.text_fg << " " << config_.input_bg << " " << config_.output_bg << " " << config_.error_bg << " " << config_.markdown_bg << "\n";
     }
 }
 
@@ -1314,6 +1322,11 @@ void HazelApp::loadPreferences() {
         in >> theme;
         if (in >> size) {
             config_.font_size = size;
+        }
+        Fl_Color fg, bg, out_bg, err_bg, md_bg;
+        bool has_colors = false;
+        if (in >> fg >> bg >> out_bg >> err_bg >> md_bg) {
+            has_colors = true;
         }
         
         hazel_config_t cfg = config_;
@@ -1331,10 +1344,16 @@ void HazelApp::loadPreferences() {
         
         if (theme == 1) { // Dark Theme
             cfg.text_fg = fl_rgb_color(220, 220, 220);
-            cfg.input_bg = fl_rgb_color(30, 30, 30);
-            cfg.output_bg = fl_rgb_color(40, 40, 45);
-            cfg.error_bg = fl_rgb_color(60, 20, 20);
-            cfg.markdown_bg = fl_rgb_color(25, 40, 25);
+            cfg.input_bg = fl_rgb_color(25, 25, 30);
+            cfg.output_bg = fl_rgb_color(15, 15, 20);
+            cfg.error_bg = fl_rgb_color(40, 10, 10);
+            cfg.markdown_bg = fl_rgb_color(20, 30, 25);
+        } else if (theme == 2 && has_colors) { // Custom Theme
+            cfg.text_fg = fg;
+            cfg.input_bg = bg;
+            cfg.output_bg = out_bg;
+            cfg.error_bg = err_bg;
+            cfg.markdown_bg = md_bg;
         }
         
         setConfig(&cfg);

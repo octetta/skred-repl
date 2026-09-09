@@ -7,6 +7,21 @@
 #include <FL/Fl_Value_Input.H>
 #include "hazel/hazel.h"
 #include <string>
+#include <FL/Fl_Color_Chooser.H>
+#include <FL/fl_draw.H>
+
+class ColorButton : public Fl_Button {
+public:
+    Fl_Color my_color;
+    ColorButton(int x, int y, int w, int h, const char* l = 0) : Fl_Button(x, y, w, h, l) {}
+    void draw() override {
+        Fl_Button::draw();
+        fl_color(my_color);
+        fl_rectf(x() + 4, y() + 4, w() - 8, h() - 8);
+        fl_color(FL_BLACK);
+        fl_rect(x() + 4, y() + 4, w() - 8, h() - 8);
+    }
+};
 
 class PreferencesWindow : public Fl_Double_Window {
     Fl_Hold_Browser* font_browser_;
@@ -16,13 +31,22 @@ class PreferencesWindow : public Fl_Double_Window {
     Fl_Button* ok_;
     Fl_Button* cancel_;
     
+    Fl_Group* custom_group_;
+    ColorButton* btn_fg_;
+    ColorButton* btn_bg_;
+    ColorButton* btn_out_;
+    ColorButton* btn_err_;
+    ColorButton* btn_md_;
+    
     std::string selected_font_;
+    hazel_config_t out_cfg_;
     int selected_theme_;
     int selected_size_;
     bool applied_ = false;
 
 public:
-    PreferencesWindow(const hazel_config_t& current_cfg) : Fl_Double_Window(420, 400, "Preferences") {
+    PreferencesWindow(const hazel_config_t& current_cfg) : Fl_Double_Window(420, 430, "Preferences") {
+        out_cfg_ = current_cfg;
         new Fl_Box(10, 10, 400, 20, "Select Font:");
         font_browser_ = new Fl_Hold_Browser(10, 30, 400, 180);
         font_browser_->has_scrollbar(Fl_Browser_::BOTH);
@@ -31,6 +55,7 @@ public:
         theme_choice_ = new Fl_Choice(110, 220, 300, 25);
         theme_choice_->add("Hazel Light");
         theme_choice_->add("Synth Dark");
+        theme_choice_->add("Custom");
         theme_choice_->value(0); // Default to light
         
         new Fl_Box(10, 255, 100, 25, "Size:");
@@ -44,8 +69,33 @@ public:
         preview_->color(FL_WHITE);
         preview_->labelsize(current_cfg.font_size);
         
-        cancel_ = new Fl_Button(240, 350, 80, 30, "Cancel");
-        ok_ = new Fl_Button(330, 350, 80, 30, "OK");
+        custom_group_ = new Fl_Group(10, 340, 400, 40);
+        new Fl_Box(10, 340, 100, 20, "Colors:");
+        btn_fg_ = new ColorButton(110, 340, 40, 25); btn_fg_->my_color = current_cfg.text_fg;
+        btn_bg_ = new ColorButton(160, 340, 40, 25); btn_bg_->my_color = current_cfg.input_bg;
+        btn_out_ = new ColorButton(210, 340, 40, 25); btn_out_->my_color = current_cfg.output_bg;
+        btn_err_ = new ColorButton(260, 340, 40, 25); btn_err_->my_color = current_cfg.error_bg;
+        btn_md_ = new ColorButton(310, 340, 40, 25); btn_md_->my_color = current_cfg.markdown_bg;
+        custom_group_->end();
+        
+        auto color_cb = [](Fl_Widget* w, void* v) {
+            ColorButton* btn = (ColorButton*)w;
+            uchar r, g, b;
+            Fl::get_color(btn->my_color, r, g, b);
+            double dr = r/255.0, dg = g/255.0, db = b/255.0;
+            if (fl_color_chooser("Pick Color", dr, dg, db)) {
+                btn->my_color = fl_rgb_color(dr * 255.0, dg * 255.0, db * 255.0);
+                btn->redraw();
+            }
+        };
+        btn_fg_->callback(color_cb);
+        btn_bg_->callback(color_cb);
+        btn_out_->callback(color_cb);
+        btn_err_->callback(color_cb);
+        btn_md_->callback(color_cb);
+
+        cancel_ = new Fl_Button(240, 390, 80, 30, "Cancel");
+        ok_ = new Fl_Button(330, 390, 80, 30, "OK");
         
         int num_fonts = Fl::set_fonts("-*");
         const char* current_font_name = Fl::get_font_name(current_cfg.font);
@@ -100,10 +150,24 @@ public:
         }
         
         if (current_cfg.input_bg == FL_WHITE) {
-            theme_choice_->value(0); // Light
+            theme_choice_->value(0);
+            custom_group_->hide();
+        } else if (current_cfg.input_bg == fl_rgb_color(30, 30, 30) || current_cfg.input_bg == fl_rgb_color(25, 25, 30)) {
+            theme_choice_->value(1);
+            custom_group_->hide();
         } else {
-            theme_choice_->value(1); // Dark
+            theme_choice_->value(2);
+            custom_group_->show();
         }
+        
+        theme_choice_->callback([](Fl_Widget*, void* v) {
+            PreferencesWindow* self = (PreferencesWindow*)v;
+            if (self->theme_choice_->value() == 2) {
+                self->custom_group_->show();
+            } else {
+                self->custom_group_->hide();
+            }
+        }, this);
         
         font_browser_->callback([](Fl_Widget*, void* v) {
             PreferencesWindow* self = (PreferencesWindow*)v;
@@ -135,6 +199,11 @@ public:
             PreferencesWindow* self = (PreferencesWindow*)v;
             self->selected_theme_ = self->theme_choice_->value();
             self->selected_size_ = (int)self->size_input_->value();
+            self->out_cfg_.text_fg = self->btn_fg_->my_color;
+            self->out_cfg_.input_bg = self->btn_bg_->my_color;
+            self->out_cfg_.output_bg = self->btn_out_->my_color;
+            self->out_cfg_.error_bg = self->btn_err_->my_color;
+            self->out_cfg_.markdown_bg = self->btn_md_->my_color;
             self->applied_ = true;
             self->hide();
         }, this);
@@ -146,7 +215,7 @@ public:
         end();
     }
     
-    bool run(std::string& out_font, int& out_theme, int& out_size) {
+    bool run(std::string& out_font, int& out_theme, int& out_size, hazel_config_t& out_custom_cfg) {
         applied_ = false;
         show();
         while (shown()) Fl::wait();
@@ -154,6 +223,7 @@ public:
             out_font = selected_font_;
             out_theme = selected_theme_;
             out_size = selected_size_;
+            out_custom_cfg = out_cfg_;
             return true;
         }
         return false;
