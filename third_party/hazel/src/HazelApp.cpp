@@ -1172,9 +1172,11 @@ void HazelApp::layoutWidgets(int W, int H) {
     status_bar_->resize(0, H - status_h, W, status_h);
     
     if (terminal_->visible()) {
-        int th = 175;
-        editor_->resize(0, 0, W, H - status_h - th);
-        terminal_->resize(0, H - status_h - th, W, th);
+        if (terminal_height_ == 0) terminal_height_ = 175;
+        int term_h = terminal_height_;
+        editor_->resize(0, 0, W, H - status_h - term_h - 4);
+        splitter_->resize(0, H - status_h - term_h - 4, W, 4);
+        terminal_->resize(0, H - status_h - term_h, W, term_h);
     } else {
         editor_->resize(0, 0, W, H - status_h);
     }
