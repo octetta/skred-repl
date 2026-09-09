@@ -71,9 +71,24 @@ int HazelEditor::handle(int event) {
             app_->openFile();
             return 1;
         } else if (key == 'd' && (Fl::event_state() & FL_COMMAND)) {
-            FILE* fp = fopen("dump.txt", "w");
-            fprintf(fp, "--- TEXT ---\n%s\n--- STYLE ---\n%s\n", buffer()->text(), app_->getStyleBuffer()->text());
-            fclose(fp);
+            int pos = insert_position();
+            char style = app_->getStyleAt(pos);
+            if (style != 0) {
+                int start = pos;
+                while (start > 0 && app_->getStyleAt(start - 1) == style) start--;
+                int end = pos;
+                while (end < buffer()->length() - 1 && app_->getStyleAt(end + 1) == style) end++;
+                if (end < buffer()->length()) end++;
+                
+                buffer()->remove_modify_callback(style_update_cb, app_);
+                buffer()->remove(start, end);
+                app_->getStyleBuffer()->remove(start, end);
+                buffer()->add_modify_callback(style_update_cb, app_);
+                
+                if (start < buffer()->length()) insert_position(start);
+                else if (start > 0) insert_position(start - 1);
+                show_insert_position();
+            }
             return 1;
         }
         
