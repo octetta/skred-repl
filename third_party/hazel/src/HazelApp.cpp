@@ -1055,27 +1055,30 @@ void HazelEditor::draw() {
     };
     
     // Iterate over visible screen space to find empty lines
-    for (int y = y_start; y < y_end; y += height) {
-        int pos = xy_to_position(this->x() + this->linenumber_width(), y);
-        if (pos < 0 || pos > buffer()->length()) continue;
-        
-        int line_start = buffer()->line_start(pos);
-        int line_end = buffer()->line_end(pos);
-        
-        if (line_start == line_end) {
-            char p = getEffectiveStyleAt(pos);
-            if (p == 'D' || app_->isOutputStyle(p)) {
-                int cx, cy;
-                if (position_to_xy(pos, &cx, &cy)) {
+    int bg_pos = xy_to_position(this->x() + this->linenumber_width(), y_start);
+    if (bg_pos >= 0) {
+        bg_pos = buffer()->line_start(bg_pos);
+        while (bg_pos <= buffer()->length()) {
+            int cx, cy;
+            if (!position_to_xy(bg_pos, &cx, &cy)) break;
+            if (cy > y_end) break;
+            
+            int line_start = bg_pos;
+            int line_end = buffer()->line_end(bg_pos);
+            
+            if (line_start == line_end) {
+                char p = getEffectiveStyleAt(bg_pos);
+                if (p == 'D' || app_->isOutputStyle(p)) {
                     if (p == 'D') fl_color(fl_rgb_color(240, 255, 240));
                     else if (p == 'B') fl_color(fl_rgb_color(240, 240, 245));
                     else if (p == 'C') fl_color(fl_rgb_color(255, 230, 230));
                     
                     fl_rectf(margin_x, cy, width, height);
-                    
-                    // We now draw a block cursor at the end of HazelEditor::draw
                 }
             }
+            
+            if (bg_pos == buffer()->length()) break;
+            bg_pos = line_end + 1;
         }
     }
     
