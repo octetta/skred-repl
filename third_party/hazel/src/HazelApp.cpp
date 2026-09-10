@@ -104,17 +104,10 @@ public:
         int cur_x = x() + 10;
         int cur_y = y();
         
-        fl_font(FL_HELVETICA, 12);
-        fl_color(FL_DARK3);
-        fl_draw(app_->status_info_.c_str(), cur_x, cur_y + 17);
-        
+        // Draw the combined status info (filename + cursor + mode) on the BOTTOM line
         fl_font(FL_HELVETICA_BOLD, 12);
-        fl_color(FL_BLACK);
-        std::string filename = app_->isDirty() ? "* " : "";
-        filename += app_->current_filepath_.empty() ? "Untitled" : app_->current_filepath_;
-        
-        // Draw filename on the bottom left!
-        fl_draw(filename.c_str(), cur_x, cur_y + 36);
+        fl_color(FL_DARK3);
+        fl_draw(app_->status_info_.c_str(), cur_x, cur_y + 36);
         
         // Draw keys starting from the far right edge!
         int right_x = x() + w() - 10;
@@ -1214,8 +1207,8 @@ void HazelApp::updateStatusBar() {
     if (slash) fname = slash + 1;
     
     char status[512];
-    snprintf(status, sizeof(status), "Ln %d, Col %d  |  %s", 
-             line, col, mode_with_idx);
+    snprintf(status, sizeof(status), "%s%s  |  Ln %d, Col %d  |  %s", 
+             is_dirty_ ? "* " : "", fname, line, col, mode_with_idx);
     
     if (status_info_ != status) {
         status_info_ = status;
