@@ -1088,7 +1088,8 @@ void HazelEditor::draw() {
     auto getBlockType = [&](char s) {
         if (s == 'D') return 1; // Markdown
         if (app_->isOutputStyle(s)) return 2; // Output
-        return 0; // Code
+        if (s == 'A') return 0; // Code
+        return -1;
     };
     
     fl_font(FL_HELVETICA_BOLD, 10);
@@ -1108,14 +1109,14 @@ void HazelEditor::draw() {
             int prev_type = getBlockType(prev);
             
             if (line_start == 0 || curr_type != prev_type) {
-                int block_idx = 1;
-                char scan_curr = '\0';
-                for (int i = 0; i < line_start; i++) {
+                int block_idx = 0;
+                int scan_curr = -1;
+                for (int i = 0; i <= line_start; i++) {
                     char s = getEffectiveStyleAt(i);
                     int t = getBlockType(s);
-                    if (t != getBlockType(scan_curr)) {
+                    if (t != scan_curr) {
                         if (t == curr_type) block_idx++;
-                        scan_curr = s;
+                        scan_curr = t;
                     }
                 }
                 
@@ -1185,11 +1186,14 @@ void HazelApp::updateStatusBar() {
     if (style == 'D') mode = "Markdown";
     else if (isOutputStyle(style)) mode = "Output";
     
+    char target_block = isOutputStyle(style) ? 'B' : style;
     int block_idx = 0;
     char current_block = '\0';
-    char target_block = isOutputStyle(style) ? 'B' : style;
-    for (int i = 0; i < pos; i++) {
+    for (int i = 0; i <= pos; i++) {
         char s = getStyleAt(i);
+        if (i == pos && pos == buffer_->length()) {
+             s = target_block;
+        }
         if (isOutputStyle(s)) s = 'B';
         if (s != current_block) {
             if (s == target_block) block_idx++;
@@ -1197,7 +1201,6 @@ void HazelApp::updateStatusBar() {
         }
     }
     if (block_idx == 0) block_idx = 1;
-    if (pos == 0) block_idx = 1;
 
     char mode_with_idx[64];
     snprintf(mode_with_idx, sizeof(mode_with_idx), "%s#%d", mode, block_idx);
