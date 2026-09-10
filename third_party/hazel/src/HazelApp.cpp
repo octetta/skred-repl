@@ -36,11 +36,12 @@ public:
                 const char* lbl = w->label();
                 char cmd[16];
                 snprintf(cmd, sizeof(cmd), "e!%s", lbl);
-                hazel_ctx_t term_ctx;
-                memset(&term_ctx, 0, sizeof(term_ctx));
-                term_ctx.is_terminal = true;
-                term_ctx.at_bottom = true;
-                app->evaluateCommand(cmd, &term_ctx);
+                hazel_ctx_t* term_ctx = new hazel_ctx_t();
+                memset(term_ctx, 0, sizeof(hazel_ctx_t));
+                term_ctx->app = app;
+                term_ctx->is_terminal = true;
+                term_ctx->at_bottom = true;
+                app->evaluateCommand(cmd, term_ctx);
             }, app);
             start_x += btn_w + gap;
         }
