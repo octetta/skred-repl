@@ -1104,12 +1104,21 @@ void HazelEditor::draw() {
     fl_font(FL_HELVETICA_BOLD, 10);
     fl_color(fl_rgb_color(150, 150, 150));
     
-    for (int y = y_start; y < y_end; y += height) {
-        int pos = xy_to_position(this->x() + m_width, y);
-        if (pos < 0 || pos > buffer()->length()) continue;
-        
-        int line_start = buffer()->line_start(pos);
-        if (pos == line_start) { // First char of the line
+    int badge_pos = xy_to_position(this->x() + m_width, y_start);
+    if (badge_pos >= 0) {
+        badge_pos = buffer()->line_start(badge_pos);
+        int last_cy = y_start;
+        while (badge_pos <= buffer()->length()) {
+            int cx, cy;
+            if (!position_to_xy(badge_pos, &cx, &cy)) {
+                cy = last_cy + height;
+                cx = margin_x;
+            } else {
+                last_cy = cy;
+            }
+            if (cy > y_end) break;
+            
+            int line_start = badge_pos;
             char curr = getEffectiveStyleAt(line_start);
             char prev = (line_start > 0) ? getEffectiveStyleAt(line_start - 1) : '\0';
             if (prev == 0) prev = 'A';
@@ -1134,20 +1143,20 @@ void HazelEditor::draw() {
                 else if (curr_type == 1) snprintf(badge, sizeof(badge), "M%d", block_idx);
                 else snprintf(badge, sizeof(badge), "O%d", block_idx);
                 
-                int cx, cy;
-                if (position_to_xy(line_start, &cx, &cy)) {
-                    if (line_start > 0) {
-                        fl_color(FL_BLACK);
-                        int line_w = this->w();
-                        if (mVScrollBar && mVScrollBar->visible()) {
-                            line_w -= mVScrollBar->w();
-                        }
-                        fl_line(m_x, cy, this->x() + line_w, cy);
+                if (line_start > 0) {
+                    fl_color(FL_BLACK);
+                    int line_w = this->w();
+                    if (mVScrollBar && mVScrollBar->visible()) {
+                        line_w -= mVScrollBar->w();
                     }
-                    fl_color(fl_rgb_color(150, 150, 150));
-                    fl_draw(badge, m_x + 4, cy + height - 4);
+                    fl_line(m_x, cy, this->x() + line_w, cy);
                 }
+                fl_color(fl_rgb_color(150, 150, 150));
+                fl_draw(badge, m_x + 4, cy + height - 4);
             }
+            
+            if (badge_pos == buffer()->length()) break;
+            badge_pos = buffer()->line_end(badge_pos) + 1;
         }
     }
     
