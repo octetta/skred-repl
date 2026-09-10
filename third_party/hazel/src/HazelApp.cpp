@@ -113,9 +113,8 @@ public:
         std::string filename = app_->isDirty() ? "* " : "";
         filename += app_->current_filepath_.empty() ? "Untitled" : app_->current_filepath_;
         
-        int fname_w = 0, fname_h = 0;
-        fl_measure(filename.c_str(), fname_w, fname_h);
-        fl_draw(filename.c_str(), x() + w() - 10 - fname_w, cur_y + 36);
+        // Draw filename on the bottom left!
+        fl_draw(filename.c_str(), cur_x, cur_y + 36);
         
         // Draw keys starting from the far right edge!
         int right_x = x() + w() - 10;
