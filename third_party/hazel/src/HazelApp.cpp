@@ -1272,6 +1272,11 @@ void HazelApp::setConfig(const hazel_config_t* config) {
         editor_->textsize(config_.font_size);
         editor_->redraw();
     }
+    if (terminal_) {
+        terminal_->textfont(config_.font);
+        terminal_->textsize(config_.font_size);
+        terminal_->redraw();
+    }
 }
 
 void HazelApp::clear() {
