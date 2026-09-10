@@ -1040,6 +1040,12 @@ void HazelEditor::draw() {
     
     auto getEffectiveStyleAt = [&](int p) -> char {
         if (p < 0) return 'A';
+        if (p == buffer()->length() && p > 0 && buffer()->char_at(p - 1) == '\n') {
+            return app_->getPendingStyle() ? app_->getPendingStyle() : 'A';
+        } else if (p == buffer()->length()) {
+            return app_->getPendingStyle() ? app_->getPendingStyle() : app_->getStyleAt(p - 1);
+        }
+        
         int l_start = buffer()->line_start(p);
         int l_end = buffer()->line_end(p);
         if (l_start == l_end) {
