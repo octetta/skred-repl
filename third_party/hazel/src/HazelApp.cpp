@@ -8,6 +8,46 @@
 
 #include <FL/fl_draw.H>
 
+class MacroBar : public Fl_Group {
+    HazelApp* app_;
+public:
+    MacroBar(int X, int Y, int W, int H, HazelApp* app) : Fl_Group(X, Y, W, H), app_(app) {
+        int btn_w = 40;
+        int gap = 5;
+        int start_x = X + 10;
+        
+        Fl_Box* lbl = new Fl_Box(start_x, Y + 5, 60, 20, "MACROS:");
+        lbl->labelsize(11);
+        lbl->labelfont(FL_HELVETICA_BOLD);
+        lbl->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
+        start_x += 60 + gap;
+        
+        for (int i = 0; i < 10; i++) {
+            char name[8];
+            snprintf(name, sizeof(name), "%d", i);
+            Fl_Button* btn = new Fl_Button(start_x, Y + 5, btn_w, 20);
+            btn->copy_label(name);
+            btn->labelsize(12);
+            btn->box(FL_FLAT_BOX);
+            btn->color(fl_rgb_color(220, 220, 230));
+            btn->selection_color(FL_DARK2);
+            btn->callback([](Fl_Widget* w, void* v) {
+                HazelApp* app = (HazelApp*)v;
+                const char* lbl = w->label();
+                char cmd[16];
+                snprintf(cmd, sizeof(cmd), "e!%s", lbl);
+                hazel_ctx_t term_ctx;
+                memset(&term_ctx, 0, sizeof(term_ctx));
+                term_ctx.is_terminal = true;
+                term_ctx.at_bottom = true;
+                app->evaluateCommand(cmd, &term_ctx);
+            }, app);
+            start_x += btn_w + gap;
+        }
+        end();
+    }
+};
+
 class StatusBar : public Fl_Box {
     HazelApp* app_;
 public:
@@ -64,12 +104,18 @@ public:
         int cur_x = x() + 10;
         int cur_y = y();
         
+        fl_font(FL_HELVETICA, 12);
+        fl_color(FL_DARK3);
+        fl_draw(app_->status_info_.c_str(), cur_x, cur_y + 17);
+        
         fl_font(FL_HELVETICA_BOLD, 12);
         fl_color(FL_BLACK);
         std::string filename = app_->isDirty() ? "* " : "";
         filename += app_->current_filepath_.empty() ? "Untitled" : app_->current_filepath_;
         
-        fl_draw(filename.c_str(), cur_x, cur_y + 17);
+        int fname_w = 0, fname_h = 0;
+        fl_measure(filename.c_str(), fname_w, fname_h);
+        fl_draw(filename.c_str(), x() + w() - 10 - fname_w, cur_y + 36);
         
         // Draw keys starting from the far right edge!
         int right_x = x() + w() - 10;
@@ -523,9 +569,13 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     splitter_ = new Splitter(0, 400, 800, 4, this);
     splitter_->hide();
     
-    status_bar_ = new StatusBar(0, 575, 800, 25, this);
+    status_bar_ = new StatusBar(0, 555, 800, 45, this);
     status_bar_->color(FL_LIGHT2);
     status_bar_->label("");
+    
+    macro_bar_ = new MacroBar(0, 545, 800, 30, this);
+    macro_bar_->color(FL_LIGHT2);
+    macro_bar_->box(FL_FLAT_BOX);
     
     win_->resizable(win_);
     win_->callback([](Fl_Widget*, void* v){ ((HazelApp*)v)->tryQuit(); }, this);
@@ -1165,8 +1215,8 @@ void HazelApp::updateStatusBar() {
     if (slash) fname = slash + 1;
     
     char status[512];
-    snprintf(status, sizeof(status), " %s%s  |  Ln %d, Col %d  |  %s", 
-             fname, is_dirty_ ? "*" : "", line, col, mode_with_idx);
+    snprintf(status, sizeof(status), "Ln %d, Col %d  |  %s", 
+             line, col, mode_with_idx);
     
     if (status_info_ != status) {
         status_info_ = status;
@@ -1258,17 +1308,21 @@ void HazelApp::setTerminalHeight(int h) {
 }
 
 void HazelApp::layoutWidgets(int W, int H) {
-    int status_h = 25;
+    int status_h = 45;
+    int macro_h = 30;
     status_bar_->resize(0, H - status_h, W, status_h);
+    macro_bar_->resize(0, H - status_h - macro_h, W, macro_h);
+    
+    int bottom_h = status_h + macro_h;
     
     if (terminal_->visible()) {
         if (terminal_height_ == 0) terminal_height_ = 175;
         int term_h = terminal_height_;
-        editor_->resize(0, 0, W, H - status_h - term_h - 4);
-        splitter_->resize(0, H - status_h - term_h - 4, W, 4);
-        terminal_->resize(0, H - status_h - term_h, W, term_h);
+        editor_->resize(0, 0, W, H - bottom_h - term_h - 4);
+        splitter_->resize(0, H - bottom_h - term_h - 4, W, 4);
+        terminal_->resize(0, H - bottom_h - term_h, W, term_h);
     } else {
-        editor_->resize(0, 0, W, H - status_h);
+        editor_->resize(0, 0, W, H - bottom_h);
     }
 }
 

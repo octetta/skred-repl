@@ -101,6 +101,7 @@ private:
     Fl_Text_Buffer* buffer_;
     Fl_Text_Buffer* style_buffer_;
     class StatusBar* status_bar_;
+    class MacroBar* macro_bar_;
     class TerminalPane* terminal_;
     class Splitter* splitter_;
     int terminal_height_ = 0;
