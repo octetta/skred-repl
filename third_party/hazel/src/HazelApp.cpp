@@ -12,8 +12,8 @@ class MacroBar : public Fl_Group {
     HazelApp* app_;
 public:
     MacroBar(int X, int Y, int W, int H, HazelApp* app) : Fl_Group(X, Y, W, H), app_(app) {
-        int btn_w = 40;
-        int gap = 5;
+        int btn_w = 22;
+        int gap = 4;
         int start_x = X + 10;
         
         Fl_Box* lbl = new Fl_Box(start_x, Y + 5, 60, 20, "MACROS:");
@@ -22,12 +22,11 @@ public:
         lbl->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         start_x += 60 + gap;
         
-        for (int i = 0; i < 10; i++) {
-            char name[8];
-            snprintf(name, sizeof(name), "%d", i);
+        for (int i = 0; i < 26; i++) {
+            char name[2] = {(char)('A' + i), '\0'};
             Fl_Button* btn = new Fl_Button(start_x, Y + 5, btn_w, 20);
             btn->copy_label(name);
-            btn->labelsize(12);
+            btn->labelsize(11);
             btn->box(FL_THIN_UP_BOX);
             btn->color(fl_rgb_color(205, 205, 215));
             btn->selection_color(FL_DARK2);
@@ -35,7 +34,7 @@ public:
                 HazelApp* app = (HazelApp*)v;
                 const char* lbl = w->label();
                 char cmd[16];
-                snprintf(cmd, sizeof(cmd), "e!%s", lbl);
+                snprintf(cmd, sizeof(cmd), "_MC%s", lbl);
                 hazel_ctx_t* term_ctx = new hazel_ctx_t();
                 memset(term_ctx, 0, sizeof(hazel_ctx_t));
                 term_ctx->app = app;
