@@ -121,11 +121,15 @@ public:
         
         drawKeyRight(right_x, cur_y, cmd, "R", "RunAll");
         drawKeyRight(right_x, cur_y, cmd, "RET", "Eval");
-        drawKeyRight(right_x, cur_y, "ALT", "RET", "Split");
+        if (app_->getConfig().parser_mode != 1) {
+            drawKeyRight(right_x, cur_y, "ALT", "RET", "Split");
+        }
         drawKeyRight(right_x, cur_y, cmd, "D", "Delete");
         drawKeyRight(right_x, cur_y, cmd, "~", "Terminal");
-        drawKeyRight(right_x, cur_y, cmd, "U", "Mkdn");
-        drawKeyRight(right_x, cur_y, cmd, "Y", "Code");
+        if (app_->getConfig().parser_mode != 1) {
+            drawKeyRight(right_x, cur_y, cmd, "U", "Mkdn");
+            drawKeyRight(right_x, cur_y, cmd, "Y", "Code");
+        }
     }
 };
 
@@ -318,7 +322,7 @@ int HazelEditor::handle(int event) {
         }
         
         // Convert to Markdown
-        if (key == 'u' && (Fl::event_state() & FL_COMMAND)) {
+        if (app_->getConfig().parser_mode != 1 && key == 'u' && (Fl::event_state() & FL_COMMAND)) {
             int pos = insert_position();
             char style = app_->getStyleAt(pos);
             if (style != 'A' && pos > 0 && app_->getStyleAt(pos - 1) == 'A' && buffer()->char_at(pos - 1) != '\n') {
@@ -348,7 +352,7 @@ int HazelEditor::handle(int event) {
         }
         
         // Convert to Code
-        if (key == 'y' && (Fl::event_state() & FL_COMMAND)) {
+        if (app_->getConfig().parser_mode != 1 && key == 'y' && (Fl::event_state() & FL_COMMAND)) {
             int pos = insert_position();
             char style = app_->getStyleAt(pos);
             if (style != 'D' && pos > 0 && app_->getStyleAt(pos - 1) == 'D' && buffer()->char_at(pos - 1) != '\n') {
@@ -378,7 +382,7 @@ int HazelEditor::handle(int event) {
         }
         
         // Split Cell (Alt+Enter)
-        if ((key == FL_Enter || key == FL_KP_Enter) && (Fl::event_state() & FL_ALT)) {
+        if (app_->getConfig().parser_mode != 1 && (key == FL_Enter || key == FL_KP_Enter) && (Fl::event_state() & FL_ALT)) {
             int pos = insert_position();
             char current_style = app_->getStyleAt(pos);
             if (current_style == 'C' || current_style == 'B') return 1; // Don't split output
