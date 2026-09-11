@@ -13,7 +13,7 @@ add_subdirectory(third_party/hazel)
 
 # Fetch skred API
 include(FetchContent)
-set(SKRED_VERSION "0.64.1" CACHE STRING "Version of skred API to download")
+set(SKRED_VERSION "0.65.1" CACHE STRING "Version of skred API to download")
 
 if(WIN32)
     set(SKRED_ASSET "skred-${SKRED_VERSION}-maxed-windows-x86_64.zip")
