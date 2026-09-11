@@ -392,6 +392,14 @@ int HazelEditor::handle(int event) {
             return 1;
         }
 
+        // Switch Focus (Ctrl+Tab or Ctrl+Down)
+        if ((key == FL_Tab && (Fl::event_state() & FL_CTRL)) || (key == FL_Down && (Fl::event_state() & FL_CTRL))) {
+            if (app_->getTerminal()->visible()) {
+                app_->getTerminal()->take_focus();
+            }
+            return 1;
+        }
+
         // Split Cell (Alt+Enter)
         if (app_->getConfig().parser_mode != 1 && (key == FL_Enter || key == FL_KP_Enter) && (Fl::event_state() & FL_ALT)) {
             int pos = insert_position();
