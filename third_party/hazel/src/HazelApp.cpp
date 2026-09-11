@@ -1391,7 +1391,9 @@ void HazelApp::updateStatusBar() {
     
     char title_buf[1024];
     snprintf(title_buf, sizeof(title_buf), "%s%s - %s", is_dirty_ ? "* " : "", fname, app_title_.c_str());
-    win_->copy_label(title_buf);
+    if (win_->label() == nullptr || strcmp(win_->label(), title_buf) != 0) {
+        win_->copy_label(title_buf);
+    }
 }
 
 void HazelApp::setDirty(bool dirty) {
