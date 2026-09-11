@@ -111,6 +111,7 @@ private:
     class Splitter* splitter_;
     int terminal_height_ = 0;
     std::string current_filepath_;
+    std::string app_title_;
     bool is_dirty_;
     
     Fl_Preferences* prefs_;

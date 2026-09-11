@@ -679,6 +679,7 @@ int HazelEditor::handle(int event) {
 
 HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data) 
     : eval_cb_(cb), user_data_(user_data) {
+    app_title_ = title ? title : "Hazel";
     
     is_dirty_ = false;
     prefs_ = new Fl_Preferences(Fl_Preferences::USER, "octetta", "hazel");
@@ -1381,13 +1382,16 @@ void HazelApp::updateStatusBar() {
     if (slash) fname = slash + 1;
     
     char status[512];
-    snprintf(status, sizeof(status), "%s%s  |  Ln %d, Col %d  |  %s", 
-             is_dirty_ ? "* " : "", fname, line, col, mode_with_idx);
+    snprintf(status, sizeof(status), "Ln %d, Col %d  |  %s", line, col, mode_with_idx);
     
     if (status_info_ != status) {
         status_info_ = status;
         status_bar_->redraw();
     }
+    
+    char title_buf[1024];
+    snprintf(title_buf, sizeof(title_buf), "%s%s - %s", is_dirty_ ? "* " : "", fname, app_title_.c_str());
+    win_->copy_label(title_buf);
 }
 
 void HazelApp::setDirty(bool dirty) {
