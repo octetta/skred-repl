@@ -74,23 +74,23 @@ public:
         Fl_Box* clbl = new Fl_Box(10, 350, 60, 20, "Colors:");
         clbl->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         
-        Fl_Box* l1 = new Fl_Box(70, 335, 50, 15, "Text"); l1->labelsize(10);
+        Fl_Box* l1 = new Fl_Box(70, 335, 50, 15, "Text FG"); l1->labelsize(10);
         btn_fg_ = new ColorButton(70, 350, 50, 25); btn_fg_->my_color = current_cfg.text_fg;
         btn_fg_->tooltip("Text Foreground");
         
-        Fl_Box* l2 = new Fl_Box(130, 335, 50, 15, "Code"); l2->labelsize(10);
+        Fl_Box* l2 = new Fl_Box(130, 335, 50, 15, "Code BG"); l2->labelsize(10);
         btn_bg_ = new ColorButton(130, 350, 50, 25); btn_bg_->my_color = current_cfg.input_bg;
         btn_bg_->tooltip("Code Block Background");
         
-        Fl_Box* l3 = new Fl_Box(190, 335, 50, 15, "Output"); l3->labelsize(10);
+        Fl_Box* l3 = new Fl_Box(190, 335, 50, 15, "Out BG"); l3->labelsize(10);
         btn_out_ = new ColorButton(190, 350, 50, 25); btn_out_->my_color = current_cfg.output_bg;
         btn_out_->tooltip("Output Block Background");
         
-        Fl_Box* l4 = new Fl_Box(250, 335, 50, 15, "Error"); l4->labelsize(10);
+        Fl_Box* l4 = new Fl_Box(250, 335, 50, 15, "Err BG"); l4->labelsize(10);
         btn_err_ = new ColorButton(250, 350, 50, 25); btn_err_->my_color = current_cfg.error_bg;
         btn_err_->tooltip("Error Block Background");
         
-        Fl_Box* l5 = new Fl_Box(310, 335, 50, 15, "Note"); l5->labelsize(10);
+        Fl_Box* l5 = new Fl_Box(310, 335, 50, 15, "Note BG"); l5->labelsize(10);
         btn_md_ = new ColorButton(310, 350, 50, 25); btn_md_->my_color = current_cfg.markdown_bg;
         btn_md_->tooltip("Note Block Background");
         
