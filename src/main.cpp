@@ -59,6 +59,29 @@ int my_save_cb(hazel_app_t* app, const char* filepath, void* user_data) {
 }
 
 void my_eval_engine(const char* input, hazel_ctx_t* ctx, void* user_data) {
+    
+    // ========================================================================
+    // INTERCEPT HOOK:
+    // This is the ideal place to intercept the entered string `input` BEFORE 
+    // it gets sent to the skred engine.
+    //
+    // For example, if you wanted a custom command to restart the engine:
+    // 
+    // if (strncmp(input, "!restart", 8) == 0) {
+    //     skred_stop();
+    //     skred_start(128, 64, 60440);
+    //
+    //     // To output to the Notebook (or Terminal if the command came from there):
+    //     // arg 1: output string
+    //     // arg 2: 0 for normal output, 1 for error (red text)
+    //     hazel_append_output(ctx, "Skred engine restarted successfully.\n", 0);
+    //
+    //     // ALWAYS call finish_eval so the UI knows the execution completed
+    //     hazel_finish_eval(ctx);
+    //     return; 
+    // }
+    // ========================================================================
+
     char buf[1024];
     snprintf(buf, sizeof(buf), "%s", input);
     
