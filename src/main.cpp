@@ -176,6 +176,10 @@ int main(int argc, char** argv) {
     config.on_open_dir = my_dir_cb;
     hazel_set_config(app, &config);
     hazel_load_preferences(app);
+
+#ifdef SKRED_REPL_VERSION
+    hazel_set_app_version(app, SKRED_REPL_VERSION);
+#endif
     
     if (argc > 1) {
         hazel_load_file(app, argv[1]);

@@ -82,6 +82,7 @@ public:
     const char* getText() const;
     const char* getStyles() const;
     void setFilepath(const char* path);
+    void setAppVersion(const char* version) { app_version_ = version ? version : ""; }
 
     void updateStatusBar();
     bool checkSaveBeforeQuit();
@@ -113,6 +114,7 @@ private:
     int terminal_height_ = 0;
     std::string current_filepath_;
     std::string app_title_;
+    std::string app_version_;
     bool is_dirty_;
     
     Fl_Preferences* prefs_;

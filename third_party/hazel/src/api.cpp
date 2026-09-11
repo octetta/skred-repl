@@ -88,6 +88,10 @@ const char* hazel_version() {
     return HAZEL_VERSION;
 }
 
+void hazel_set_app_version(hazel_app_t* app, const char* version) {
+    if (app) ((HazelApp*)app)->setAppVersion(version);
+}
+
 void hazel_set_config(hazel_app_t* app, const hazel_config_t* config) {
     if (app && config) {
         ((HazelApp*)app)->setConfig(config);

@@ -170,15 +170,17 @@ public:
 
 class HelpWindow : public Fl_Double_Window {
 public:
-    HelpWindow(bool is_skred_mode) : Fl_Double_Window(450, 600, "Help & About") {
+    HelpWindow(const std::string& app_title, const std::string& app_version, bool is_skred_mode) : Fl_Double_Window(450, 600, "Help & About") {
         this->color(fl_rgb_color(245, 245, 250));
         
-        Fl_Box* title = new Fl_Box(20, 20, 410, 30, "Hazel Editor");
+        std::string disp_title = app_title.empty() ? "Hazel Editor" : app_title;
+        Fl_Box* title = new Fl_Box(20, 15, 410, 30, strdup(disp_title.c_str()));
         title->labelsize(20);
         title->labelfont(FL_HELVETICA_BOLD);
         title->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
         
-        Fl_Box* ver = new Fl_Box(20, 50, 410, 20, "Version " HAZEL_VERSION);
+        std::string disp_ver = app_version.empty() ? std::string("Version " HAZEL_VERSION) : (app_version + "\n(Powered by Hazel " HAZEL_VERSION ")");
+        Fl_Box* ver = new Fl_Box(20, 45, 410, 30, strdup(disp_ver.c_str()));
         ver->labelsize(12);
         ver->labelfont(FL_HELVETICA);
         ver->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
@@ -495,8 +497,7 @@ int HazelEditor::handle(int event) {
         
         // Help / About
         if (key == '/' && (Fl::event_state() & FL_COMMAND)) {
-            HelpWindow* hw = new HelpWindow(app_->getConfig().parser_mode == 1);
-            hw->show();
+            app_->showHelpWindow();
             return 1;
         }
 
@@ -1690,7 +1691,7 @@ void HazelApp::loadPreferences() {
 }
 
 void HazelApp::showHelpWindow() {
-    HelpWindow* hw = new HelpWindow(config_.parser_mode == 1);
+    HelpWindow* hw = new HelpWindow(app_title_, app_version_, config_.parser_mode == 1);
     hw->show();
 }
 

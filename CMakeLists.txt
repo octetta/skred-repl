@@ -33,6 +33,14 @@ FetchContent_MakeAvailable(skred_api)
 add_executable(skred-repl MACOSX_BUNDLE WIN32 src/main.cpp)
 target_include_directories(skred-repl PRIVATE ${skred_api_SOURCE_DIR}/include)
 
+execute_process(COMMAND git describe --tags --always
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                OUTPUT_VARIABLE APP_VERSION
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(APP_VERSION)
+    target_compile_definitions(skred-repl PRIVATE SKRED_REPL_VERSION="${APP_VERSION}")
+endif()
+
 if(WIN32)
     target_link_libraries(skred-repl PRIVATE hazel ${skred_api_SOURCE_DIR}/lib/libapi.a ws2_32 winmm ole32)
 elseif(APPLE)
