@@ -1452,10 +1452,10 @@ void HazelApp::setConfig(const hazel_config_t* config) {
     
     if (win_) win_->color(config_.input_bg);
     if (status_bar_) {
-        status_bar_->color(config_.output_bg);
-        status_bar_->labelcolor(config_.text_fg);
+        status_bar_->color(FL_LIGHT2);
+        status_bar_->labelcolor(FL_BLACK);
     }
-    if (macro_bar_) macro_bar_->color(config_.output_bg);
+    if (macro_bar_) macro_bar_->color(FL_LIGHT2);
     
     if (editor_) {
         editor_->color(config_.input_bg);
