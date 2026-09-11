@@ -127,6 +127,7 @@ public:
         }
         drawKeyLeft(left_x, cur_y, cmd, "RET", "Eval");
         drawKeyLeft(left_x, cur_y, cmd, "R", "RunAll");
+        drawKeyLeft(left_x, cur_y, cmd, "/", "Help");
     }
 };
 
@@ -166,6 +167,68 @@ public:
 
 
 
+
+class HelpWindow : public Fl_Double_Window {
+public:
+    HelpWindow(bool is_skred_mode) : Fl_Double_Window(400, 480, "Help & About") {
+        this->color(fl_rgb_color(245, 245, 250));
+        
+        Fl_Box* title = new Fl_Box(20, 20, 360, 30, "Hazel Editor");
+        title->labelsize(20);
+        title->labelfont(FL_HELVETICA_BOLD);
+        title->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
+        
+        Fl_Box* ver = new Fl_Box(20, 50, 360, 20, "Version " HAZEL_VERSION);
+        ver->labelsize(12);
+        ver->labelfont(FL_HELVETICA);
+        ver->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
+        
+        Fl_Text_Buffer* buf = new Fl_Text_Buffer();
+        Fl_Text_Display* disp = new Fl_Text_Display(20, 90, 360, 320);
+        disp->buffer(buf);
+        disp->box(FL_FLAT_BOX);
+        disp->color(this->color());
+        disp->textfont(FL_HELVETICA);
+        disp->textsize(13);
+        
+        std::string help_text = 
+            "Keyboard Shortcuts:\n\n"
+            "  Cmd/Ctrl + S : Save File\n"
+            "  Cmd/Ctrl + Shift + S : Save As...\n"
+            "  Cmd/Ctrl + O : Open File\n"
+            "  Cmd/Ctrl + , : Preferences\n\n"
+            "  Cmd/Ctrl + Enter : Evaluate Current Block\n"
+            "  Cmd/Ctrl + R : Run All Blocks\n"
+            "  Cmd/Ctrl + D : Delete Current Block\n\n"
+            "  Cmd/Ctrl + ~ : Toggle Terminal Panel\n"
+            "  Ctrl + Tab / Ctrl + Down : Focus Terminal\n"
+            "  Ctrl + Tab / Ctrl + Up : Focus Editor\n\n";
+            
+        if (is_skred_mode) {
+            help_text += 
+                "Skred-REPL Mode:\n"
+                "  ## starts a Comment Block\n"
+                "  # continues a Comment Block\n"
+                "  Any normal line starts a Code Block\n"
+                "  Alt + A-Z : Run Macro _MCA to _MCZ\n";
+        } else {
+            help_text += 
+                "  Cmd/Ctrl + U : Convert to Markdown\n"
+                "  Cmd/Ctrl + Y : Convert to Code\n"
+                "  Alt + Enter : Split Cell\n";
+        }
+        
+        buf->text(help_text.c_str());
+        
+        Fl_Button* close_btn = new Fl_Button(160, 430, 80, 30, "Close");
+        close_btn->callback([](Fl_Widget*, void* v) {
+            ((Fl_Window*)v)->hide();
+        }, this);
+        
+        this->set_modal();
+        this->end();
+    }
+};
 static void style_update_cb(int pos, int nInserted, int nDeleted, int nRestyled, const char* deletedText, void* cbArg) {
     HazelApp* app = (HazelApp*)cbArg;
     Fl_Text_Buffer* style_buf = app->getStyleBuffer();
@@ -421,6 +484,13 @@ int HazelEditor::handle(int event) {
             return 1;
         }
         
+        // Help / About
+        if (key == '/' && (Fl::event_state() & FL_COMMAND)) {
+            HelpWindow* hw = new HelpWindow(app_->getConfig().parser_mode == 1);
+            hw->show();
+            return 1;
+        }
+
         // Preferences
         if (key == ',' && (Fl::event_state() & FL_COMMAND)) {
             PreferencesWindow prefs(app_->getConfig());
