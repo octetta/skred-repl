@@ -1200,9 +1200,13 @@ void HazelEditor::draw() {
             return app_->getPendingStyle() ? app_->getPendingStyle() : app_->getStyleAt(p - 1);
         }
         
-        int l_start = buffer()->line_start(p);
-        int l_end = buffer()->line_end(p);
-        if (l_start == l_end) {
+        bool is_empty_line = false;
+        if (p < buffer()->length() && buffer()->char_at(p) == '\n') {
+            if (p == 0 || buffer()->char_at(p - 1) == '\n') is_empty_line = true;
+        } else if (p == buffer()->length()) {
+            if (p == 0 || buffer()->char_at(p - 1) == '\n') is_empty_line = true;
+        }
+        if (is_empty_line) {
             if (p == insert_position() && app_->getPendingStyle() != 0) return app_->getPendingStyle();
             char p_curr = app_->getStyleAt(p);
             if (p_curr == 'A' || p_curr == 'D' || p_curr == 'C' || p_curr == 'B') return p_curr;
@@ -1342,7 +1346,20 @@ void HazelEditor::draw() {
 }
 
 void HazelApp::updateStatusBar() {
+    static int last_pos = -1;
+    static int last_length = -1;
+    static int last_dirty = -1;
     int pos = editor_->insert_position();
+    int length = buffer_->length();
+    int dirty = is_dirty_ ? 1 : 0;
+    
+    if (pos == last_pos && length == last_length && dirty == last_dirty) {
+        return; // Skip recalculation if nothing changed
+    }
+    last_pos = pos;
+    last_length = length;
+    last_dirty = dirty;
+    
     int line = buffer_->count_lines(0, pos) + 1;
     int line_start = buffer_->line_start(pos);
     int col = pos - line_start + 1;
