@@ -198,17 +198,14 @@ public:
         }
         
         theme_choice_->value(current_cfg.theme);
-        if (current_cfg.theme == 2) {
-            custom_group_->show();
-        } else {
-            custom_group_->hide();
-        }
+        custom_group_->show();
         
         theme_choice_->callback([](Fl_Widget*, void* v) {
             PreferencesWindow* self = (PreferencesWindow*)v;
             int t = self->theme_choice_->value();
+            self->custom_group_->show(); // Always show color pickers
+            
             if (t == 2) {
-                self->custom_group_->show();
                 bool is_light = (self->btn_bg_->my_color == FL_WHITE);
                 bool is_dark = (self->btn_bg_->my_color == fl_rgb_color(25, 25, 30));
                 if (is_light || is_dark) { // Seed Solarized
@@ -230,7 +227,6 @@ public:
                     self->preview_->redraw();
                 }
             } else {
-                self->custom_group_->hide();
                 if (t == 0) { // Light
                     self->btn_fg_->my_color = FL_BLACK;
                     self->btn_bg_->my_color = FL_WHITE;

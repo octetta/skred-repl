@@ -529,37 +529,16 @@ int HazelEditor::handle(int event) {
                 }
                 
                 cfg.theme = theme;
-                if (theme == 0) { // Light
-                    cfg.text_fg = FL_BLACK;
-                    cfg.input_bg = FL_WHITE;
-                    cfg.output_bg = fl_rgb_color(245, 245, 250);
-                    cfg.error_bg = fl_rgb_color(255, 235, 235);
-                    cfg.markdown_bg = fl_rgb_color(245, 255, 245);
-                    cfg.error_fg = FL_DARK_RED;
-                    cfg.markdown_fg = FL_DARK_GREEN;
-                    cfg.cursor_fg = FL_WHITE;
-                    cfg.cursor_bg = FL_BLACK;
-                } else if (theme == 1) { // Dark
-                    cfg.text_fg = fl_rgb_color(220, 220, 220);
-                    cfg.input_bg = fl_rgb_color(25, 25, 30);
-                    cfg.output_bg = fl_rgb_color(15, 15, 20);
-                    cfg.error_bg = fl_rgb_color(40, 10, 10);
-                    cfg.markdown_bg = fl_rgb_color(20, 30, 25);
-                    cfg.error_fg = fl_rgb_color(255, 100, 100);
-                    cfg.markdown_fg = fl_rgb_color(100, 255, 100);
-                    cfg.cursor_fg = fl_rgb_color(25, 25, 30);  // Dark text on block cursor
-                    cfg.cursor_bg = fl_rgb_color(220, 220, 220); // Light block
-                } else if (theme == 2) { // Custom
-                    cfg.text_fg = custom_colors.text_fg;
-                    cfg.input_bg = custom_colors.input_bg;
-                    cfg.output_bg = custom_colors.output_bg;
-                    cfg.error_bg = custom_colors.error_bg;
-                    cfg.markdown_bg = custom_colors.markdown_bg;
-                    cfg.error_fg = custom_colors.error_fg;
-                    cfg.markdown_fg = custom_colors.markdown_fg;
-                    cfg.cursor_fg = custom_colors.cursor_fg;
-                    cfg.cursor_bg = custom_colors.cursor_bg;
-                }
+                // Always use the colors returned by the UI, because the user might have customized Light/Dark!
+                cfg.text_fg = custom_colors.text_fg;
+                cfg.input_bg = custom_colors.input_bg;
+                cfg.output_bg = custom_colors.output_bg;
+                cfg.error_bg = custom_colors.error_bg;
+                cfg.markdown_bg = custom_colors.markdown_bg;
+                cfg.error_fg = custom_colors.error_fg;
+                cfg.markdown_fg = custom_colors.markdown_fg;
+                cfg.cursor_fg = custom_colors.cursor_fg;
+                cfg.cursor_bg = custom_colors.cursor_bg;
                 app_->setConfig(&cfg);
                 app_->savePreferences(font, theme, size);
             }
@@ -1475,6 +1454,8 @@ void HazelApp::setConfig(const hazel_config_t* config) {
         editor_->textfont(config_.font);
         editor_->textsize(config_.font_size);
         editor_->cursor_color(config_.cursor_bg);
+        editor_->hide_cursor();
+        editor_->show_cursor();
         editor_->redraw();
     }
     if (terminal_) {
@@ -1642,17 +1623,7 @@ void HazelApp::loadPreferences() {
         }
         
         cfg.theme = theme;
-        if (theme == 1) { // Dark Theme
-            cfg.text_fg = fl_rgb_color(220, 220, 220);
-            cfg.input_bg = fl_rgb_color(25, 25, 30);
-            cfg.output_bg = fl_rgb_color(15, 15, 20);
-            cfg.error_bg = fl_rgb_color(40, 10, 10);
-            cfg.markdown_bg = fl_rgb_color(20, 30, 25);
-            cfg.error_fg = fl_rgb_color(255, 100, 100);
-            cfg.markdown_fg = fl_rgb_color(100, 255, 100);
-            cfg.cursor_fg = fl_rgb_color(25, 25, 30);
-            cfg.cursor_bg = fl_rgb_color(220, 220, 220);
-        } else if (theme == 2 && has_colors) { // Custom Theme
+        if (has_colors) { // Always respect saved colors for any theme!
             cfg.text_fg = fg;
             cfg.input_bg = bg;
             cfg.output_bg = out_bg;
@@ -1662,16 +1633,28 @@ void HazelApp::loadPreferences() {
             cfg.markdown_fg = md_f;
             cfg.cursor_fg = csr_f;
             cfg.cursor_bg = csr_b;
-        } else if (theme == 2 && !has_colors) { // Default Solarized for Custom
-            cfg.text_fg = fl_rgb_color(131, 148, 150);
-            cfg.input_bg = fl_rgb_color(0, 43, 54);
-            cfg.output_bg = fl_rgb_color(7, 54, 66);
-            cfg.error_bg = fl_rgb_color(220, 50, 47);
-            cfg.markdown_bg = fl_rgb_color(7, 54, 66);
-            cfg.error_fg = fl_rgb_color(0, 43, 54);
-            cfg.markdown_fg = fl_rgb_color(147, 161, 161);
-            cfg.cursor_fg = fl_rgb_color(0, 43, 54);
-            cfg.cursor_bg = fl_rgb_color(181, 137, 0);
+        } else {
+            if (theme == 1) { // Dark Theme fallback
+                cfg.text_fg = fl_rgb_color(220, 220, 220);
+                cfg.input_bg = fl_rgb_color(25, 25, 30);
+                cfg.output_bg = fl_rgb_color(15, 15, 20);
+                cfg.error_bg = fl_rgb_color(40, 10, 10);
+                cfg.markdown_bg = fl_rgb_color(20, 30, 25);
+                cfg.error_fg = fl_rgb_color(255, 100, 100);
+                cfg.markdown_fg = fl_rgb_color(100, 255, 100);
+                cfg.cursor_fg = fl_rgb_color(25, 25, 30);
+                cfg.cursor_bg = fl_rgb_color(220, 220, 220);
+            } else if (theme == 2) { // Custom Theme fallback (Solarized)
+                cfg.text_fg = fl_rgb_color(131, 148, 150);
+                cfg.input_bg = fl_rgb_color(0, 43, 54);
+                cfg.output_bg = fl_rgb_color(7, 54, 66);
+                cfg.error_bg = fl_rgb_color(220, 50, 47);
+                cfg.markdown_bg = fl_rgb_color(7, 54, 66);
+                cfg.error_fg = fl_rgb_color(0, 43, 54);
+                cfg.markdown_fg = fl_rgb_color(147, 161, 161);
+                cfg.cursor_fg = fl_rgb_color(0, 43, 54);
+                cfg.cursor_bg = fl_rgb_color(181, 137, 0);
+            }
         }
         
         setConfig(&cfg);
