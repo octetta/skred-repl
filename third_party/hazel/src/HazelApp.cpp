@@ -491,6 +491,22 @@ int HazelEditor::handle(int event) {
             return 1;
         }
 
+        // Zoom In/Out
+        if ((key == '=' || key == '-' || key == '0') && (Fl::event_state() & FL_COMMAND)) {
+            int new_size = app_->getConfig().font_size;
+            if (key == '=') new_size += 2;
+            else if (key == '-') new_size -= 2;
+            else if (key == '0') new_size = 15;
+            
+            if (new_size < 8) new_size = 8;
+            if (new_size > 72) new_size = 72;
+            
+            hazel_config_t cfg = app_->getConfig();
+            cfg.font_size = new_size;
+            app_->setConfig(&cfg);
+            return 1;
+        }
+
         // Preferences
         if (key == ',' && (Fl::event_state() & FL_COMMAND)) {
             PreferencesWindow prefs(app_->getConfig());
@@ -1312,7 +1328,7 @@ void HazelEditor::draw() {
                 else snprintf(badge, sizeof(badge), "O%d", block_idx);
                 
                 if (line_start > 0) {
-                    fl_color(FL_BLACK);
+                    fl_color(fl_color_average(app_->getConfig().text_fg, app_->getConfig().input_bg, 0.2f));
                     int line_w = this->w();
                     if (mVScrollBar && mVScrollBar->visible()) {
                         line_w -= mVScrollBar->w();
@@ -1351,7 +1367,7 @@ void HazelEditor::draw() {
     }
     
     // Draw a subtle border separating margin from content
-    fl_color(fl_rgb_color(210, 210, 210));
+    fl_color(fl_color_average(app_->getConfig().text_fg, app_->getConfig().input_bg, 0.1f));
     fl_line(m_x + m_width - 1, y_start, m_x + m_width - 1, y_end);
 }
 
@@ -1437,11 +1453,13 @@ void HazelApp::setConfig(const hazel_config_t* config) {
         editor_->highlight_data(style_buffer_, styletable_, next_style_index_, 'A', 0, 0);
         editor_->textfont(config_.font);
         editor_->textsize(config_.font_size);
+        editor_->cursor_color(config_.text_fg);
         editor_->redraw();
     }
     if (terminal_) {
         terminal_->textfont(config_.font);
         terminal_->textsize(config_.font_size);
+        terminal_->cursor_color(config_.text_fg);
         terminal_->redraw();
     }
 }

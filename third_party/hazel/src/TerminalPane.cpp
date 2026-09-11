@@ -131,6 +131,22 @@ int TerminalPane::handle(int event) {
         int key = Fl::event_key();
         int state = Fl::event_state();
         
+        // Zoom In/Out
+        if ((key == '=' || key == '-' || key == '0') && (state & FL_COMMAND)) {
+            int new_size = app_->getConfig().font_size;
+            if (key == '=') new_size += 2;
+            else if (key == '-') new_size -= 2;
+            else if (key == '0') new_size = 15;
+            
+            if (new_size < 8) new_size = 8;
+            if (new_size > 72) new_size = 72;
+            
+            hazel_config_t cfg = app_->getConfig();
+            cfg.font_size = new_size;
+            app_->setConfig(&cfg);
+            return 1;
+        }
+
         // Hide terminal on Ctrl+~
         if ((key == '`' || key == '~') && (state & FL_COMMAND)) {
             app_->toggleTerminal();
@@ -202,11 +218,11 @@ void TerminalPane::draw() {
             fl_font(textfont(), textsize());
             int c_width = fl_width("W");
             
-            fl_color(FL_BLACK);
+            fl_color(app_->config_.text_fg);
             fl_rectf(cx, cy, c_width, mMaxsize);
             
             if (c != '\n' && c != '\0' && c != '\r') {
-                fl_color(FL_WHITE);
+                fl_color(app_->config_.input_bg);
                 char s[2] = {c, '\0'};
                 fl_draw(s, cx, cy + mMaxsize - fl_descent());
             }
