@@ -174,13 +174,15 @@ public:
         this->color(fl_rgb_color(245, 245, 250));
         
         std::string disp_title = app_title.empty() ? "Hazel Editor" : app_title;
-        Fl_Box* title = new Fl_Box(20, 15, 410, 30, strdup(disp_title.c_str()));
+        Fl_Box* title = new Fl_Box(20, 15, 410, 30);
+        title->copy_label(disp_title.c_str());
         title->labelsize(20);
         title->labelfont(FL_HELVETICA_BOLD);
         title->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
         
         std::string disp_ver = app_version.empty() ? std::string("Version " HAZEL_VERSION) : (app_version + "\n(Powered by Hazel " HAZEL_VERSION ")");
-        Fl_Box* ver = new Fl_Box(20, 45, 410, 30, strdup(disp_ver.c_str()));
+        Fl_Box* ver = new Fl_Box(20, 45, 410, 30);
+        ver->copy_label(disp_ver.c_str());
         ver->labelsize(12);
         ver->labelfont(FL_HELVETICA);
         ver->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
@@ -749,6 +751,8 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
 }
 
 HazelApp::~HazelApp() {
+    if (last_text_) free(last_text_);
+    if (last_styles_) free(last_styles_);
     delete prefs_;
     delete win_;
     delete buffer_;
@@ -1513,11 +1517,15 @@ void HazelApp::appendBlock(char style, const char* text) {
 }
 
 const char* HazelApp::getText() const {
-    return buffer_->text();
+    if (last_text_) free(last_text_);
+    last_text_ = buffer_->text();
+    return last_text_;
 }
 
 const char* HazelApp::getStyles() const {
-    return style_buffer_->text();
+    if (last_styles_) free(last_styles_);
+    last_styles_ = style_buffer_->text();
+    return last_styles_;
 }
 
 void HazelApp::setFilepath(const char* path) {
@@ -1698,6 +1706,10 @@ void HazelApp::loadPreferences() {
 
 void HazelApp::showHelpWindow() {
     HelpWindow* hw = new HelpWindow(app_title_, app_version_, config_.parser_mode == 1);
+    hw->callback([](Fl_Widget* w, void*) {
+        w->hide();
+        Fl::delete_widget(w);
+    });
     hw->show();
 }
 

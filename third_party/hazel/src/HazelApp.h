@@ -115,6 +115,8 @@ private:
     std::string current_filepath_;
     std::string app_title_;
     std::string app_version_;
+    mutable char* last_text_ = nullptr;
+    mutable char* last_styles_ = nullptr;
     bool is_dirty_;
     
     Fl_Preferences* prefs_;
