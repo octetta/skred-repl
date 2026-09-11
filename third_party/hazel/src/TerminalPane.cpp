@@ -137,6 +137,19 @@ int TerminalPane::handle(int event) {
             return 1;
         }
         
+        if (key >= 'a' && key <= 'z' && (state & FL_ALT)) {
+            char lbl[2] = {(char)('A' + (key - 'a')), '\0'};
+            char cmd[16];
+            snprintf(cmd, sizeof(cmd), "_MC%s", lbl);
+            hazel_ctx_t* term_ctx = new hazel_ctx_t();
+            memset(term_ctx, 0, sizeof(hazel_ctx_t));
+            term_ctx->app = app_;
+            term_ctx->is_terminal = true;
+            term_ctx->at_bottom = true;
+            app_->evaluateCommand(cmd, term_ctx);
+            return 1;
+        }
+        
         if (key == FL_Escape) {
             app_->getEditor()->take_focus();
             return 1;
