@@ -378,6 +378,20 @@ int HazelEditor::handle(int event) {
             return 1;
         }
         
+        // Alt+A to Alt+Z Macros
+        if (key >= 'a' && key <= 'z' && (Fl::event_state() & FL_ALT)) {
+            char lbl[2] = {(char)('A' + (key - 'a')), '\0'};
+            char cmd[16];
+            snprintf(cmd, sizeof(cmd), "_MC%s", lbl);
+            hazel_ctx_t* term_ctx = new hazel_ctx_t();
+            memset(term_ctx, 0, sizeof(hazel_ctx_t));
+            term_ctx->app = app_;
+            term_ctx->is_terminal = true;
+            term_ctx->at_bottom = true;
+            app_->evaluateCommand(cmd, term_ctx);
+            return 1;
+        }
+
         // Split Cell (Alt+Enter)
         if (app_->getConfig().parser_mode != 1 && (key == FL_Enter || key == FL_KP_Enter) && (Fl::event_state() & FL_ALT)) {
             int pos = insert_position();
