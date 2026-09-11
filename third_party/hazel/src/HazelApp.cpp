@@ -464,7 +464,7 @@ int HazelEditor::handle(int event) {
                     for (int i = start; i < end; i++) {
                         char s = app_->getStyleAt(i);
                         if (app_->isOutputStyle(s)) return 1;
-                        if (s != first_s) return 1; // Prevent deleting across multiple cell types
+                        if (app_->getConfig().parser_mode != 1 && s != first_s) return 1; // Prevent deleting across multiple cell types
                     }
                 }
             } else {
@@ -475,10 +475,12 @@ int HazelEditor::handle(int event) {
                         if (app_->isOutputStyle(s)) return 1;
                         
                         char curr = app_->getStyleAt(pos);
-                        if (curr != 0 && s != 0 && curr != s) return 1;
-                        
-                        if (buffer()->char_at(pos - 1) == '\n' && pos > 1 && pos < buffer()->length()) {
-                            if (app_->getStyleAt(pos - 2) != app_->getStyleAt(pos)) return 1;
+                        if (app_->getConfig().parser_mode != 1) {
+                            if (curr != 0 && s != 0 && curr != s) return 1;
+                            
+                            if (buffer()->char_at(pos - 1) == '\n' && pos > 1 && pos < buffer()->length()) {
+                                if (app_->getStyleAt(pos - 2) != app_->getStyleAt(pos)) return 1;
+                            }
                         }
                     }
                 } else if (key == FL_Delete) {
@@ -486,8 +488,10 @@ int HazelEditor::handle(int event) {
                         char s = app_->getStyleAt(pos);
                         if (app_->isOutputStyle(s)) return 1;
                         
-                        if (buffer()->char_at(pos) == '\n' && pos > 0 && pos + 1 < buffer()->length()) {
-                            if (app_->getStyleAt(pos - 1) != app_->getStyleAt(pos + 1)) return 1;
+                        if (app_->getConfig().parser_mode != 1) {
+                            if (buffer()->char_at(pos) == '\n' && pos > 0 && pos + 1 < buffer()->length()) {
+                                if (app_->getStyleAt(pos - 1) != app_->getStyleAt(pos + 1)) return 1;
+                            }
                         }
                     }
                 } else {
