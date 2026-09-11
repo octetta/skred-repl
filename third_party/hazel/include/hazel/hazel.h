@@ -4,10 +4,10 @@
 extern "C" {
 #endif
 
-#define HAZEL_VERSION "0.1.1"
+#define HAZEL_VERSION "0.1.2"
 #define HAZEL_VERSION_MAJOR 0
 #define HAZEL_VERSION_MINOR 1
-#define HAZEL_VERSION_PATCH 1
+#define HAZEL_VERSION_PATCH 2
 
 const char* hazel_version();
 
