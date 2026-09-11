@@ -1584,14 +1584,20 @@ void HazelApp::evaluateCommand(const char* cmd, hazel_ctx_t* ctx) {
 #include <cstdlib>
 #include <fstream>
 #include <sys/stat.h>
+#ifdef _WIN32
+#include <direct.h>
+#define OS_MKDIR(path) _mkdir(path)
+#else
+#define OS_MKDIR(path) mkdir(path, 0755)
+#endif
 
 static std::string getPrefsPath() {
     const char* home = getenv("HOME");
     if (!home) return "hazel_prefs.cfg";
     std::string dir = std::string(home) + "/.config";
-    mkdir(dir.c_str(), 0755);
+    OS_MKDIR(dir.c_str());
     dir += "/hazel";
-    mkdir(dir.c_str(), 0755);
+    OS_MKDIR(dir.c_str());
     return dir + "/prefs.cfg";
 }
 
