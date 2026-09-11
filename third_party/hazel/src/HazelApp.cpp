@@ -1346,11 +1346,11 @@ void HazelEditor::draw() {
             fl_font(textfont(), textsize());
             int c_width = fl_width("W"); // Monospace uniform block width
             
-            fl_color(FL_BLACK);
+            fl_color(app_->getConfig().cursor_bg);
             fl_rectf(cx, cy, c_width, mMaxsize);
             
             if (c != '\n' && c != '\0' && c != '\r') {
-                fl_color(FL_WHITE);
+                fl_color(app_->getConfig().cursor_fg);
                 char s[2] = {c, '\0'};
                 // Exact FLTK baseline
                 fl_draw(s, cx, cy + mMaxsize - fl_descent());
