@@ -42,6 +42,11 @@ public:
     int run();
     
     void loadPreferences();
+    void showPreferences();
+    void showHelpWindow();
+    void zoomIn();
+    void zoomOut();
+    void zoomReset();
     void savePreferences(const std::string& font, int theme, int size);
     
     void openFile();

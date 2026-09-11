@@ -196,11 +196,15 @@ public:
             "  Cmd/Ctrl + S : Save File\n"
             "  Cmd/Ctrl + Shift + S : Save As...\n"
             "  Cmd/Ctrl + O : Open File\n"
-            "  Cmd/Ctrl + , : Preferences\n\n"
+            "  Cmd/Ctrl + , : Preferences\n"
+            "  Cmd/Ctrl + / : Help / About\n\n"
+            "  Cmd/Ctrl + = / - / 0 : Zoom In / Out / Reset\n\n"
             "  Cmd/Ctrl + Enter : Evaluate Current Block\n"
             "  Cmd/Ctrl + R : Run All Blocks\n"
-            "  Cmd/Ctrl + D : Delete Current Block\n\n"
-            "  Cmd/Ctrl + ~ : Toggle Terminal Panel\n"
+            "  Cmd/Ctrl + D : Delete Current Block\n"
+            "  Cmd/Ctrl + Up / Down : Move Cell\n"
+            "  Alt + A..Z : Trigger Macros A-Z\n\n"
+            "  Ctrl + ` : Toggle Terminal Panel\n"
             "  Ctrl + Tab / Ctrl + Down : Focus Terminal\n"
             "  Ctrl + Tab / Ctrl + Up : Focus Editor\n\n";
             
@@ -509,40 +513,7 @@ int HazelEditor::handle(int event) {
 
         // Preferences
         if (key == ',' && (Fl::event_state() & FL_COMMAND)) {
-            PreferencesWindow prefs(app_->getConfig());
-            std::string font;
-            int theme = 0;
-            int size = 15;
-            hazel_config_t custom_colors;
-            if (prefs.run(font, theme, size, custom_colors)) {
-                hazel_config_t cfg = app_->getConfig();
-                cfg.font_size = size;
-                if (!font.empty()) {
-                    int num_fonts = Fl::set_fonts("-*");
-                    for (int i = 0; i < num_fonts; i++) {
-                        const char* name = Fl::get_font_name((Fl_Font)i);
-                        if (name && font == name) {
-                            cfg.font = (Fl_Font)i;
-                            break;
-                        }
-                    }
-                }
-                
-                cfg.theme = theme;
-                // Always use the colors returned by the UI, because the user might have customized Light/Dark!
-                cfg.text_fg = custom_colors.text_fg;
-                cfg.input_bg = custom_colors.input_bg;
-                cfg.output_bg = custom_colors.output_bg;
-                cfg.error_bg = custom_colors.error_bg;
-                cfg.markdown_bg = custom_colors.markdown_bg;
-                cfg.error_fg = custom_colors.error_fg;
-                cfg.markdown_fg = custom_colors.markdown_fg;
-                cfg.cursor_fg = custom_colors.cursor_fg;
-                cfg.cursor_bg = custom_colors.cursor_bg;
-                cfg.select_bg = custom_colors.select_bg;
-                app_->setConfig(&cfg);
-                app_->savePreferences(font, theme, size);
-            }
+            app_->showPreferences();
             return 1;
         }
         
@@ -1433,8 +1404,8 @@ void HazelApp::tryQuit() {
 void HazelApp::applyConfig() {
     styletable_[0] = { (Fl_Color)config_.text_fg, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.input_bg };
     styletable_[1] = { (Fl_Color)config_.text_fg, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.output_bg };
-    styletable_[2] = { FL_DARK_RED, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.error_bg };
-    styletable_[3] = { FL_DARK_GREEN, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.markdown_bg };
+    styletable_[2] = { (Fl_Color)config_.error_fg, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.error_bg };
+    styletable_[3] = { (Fl_Color)config_.markdown_fg, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.markdown_bg };
 }
 
 void HazelApp::setConfig(const hazel_config_t* config) {
@@ -1671,4 +1642,59 @@ void HazelApp::loadPreferences() {
         
         setConfig(&cfg);
     }
+}
+
+void HazelApp::showHelpWindow() {
+    HelpWindow* hw = new HelpWindow(config_.parser_mode == 1);
+    hw->show();
+}
+
+void HazelApp::showPreferences() {
+    PreferencesWindow prefs(getConfig());
+    std::string font;
+    int theme = 0;
+    int size = 15;
+    hazel_config_t custom_colors;
+    if (prefs.run(font, theme, size, custom_colors)) {
+        hazel_config_t cfg = getConfig();
+        cfg.font_size = size;
+        if (!font.empty()) {
+            int num_fonts = Fl::set_fonts("-*");
+            for (int i = 0; i < num_fonts; i++) {
+                const char* name = Fl::get_font_name((Fl_Font)i);
+                if (name && font == name) {
+                    cfg.font = (Fl_Font)i;
+                    break;
+                }
+            }
+        }
+        cfg.theme = theme;
+        cfg.text_fg = custom_colors.text_fg;
+        cfg.input_bg = custom_colors.input_bg;
+        cfg.output_bg = custom_colors.output_bg;
+        cfg.error_bg = custom_colors.error_bg;
+        cfg.markdown_bg = custom_colors.markdown_bg;
+        cfg.error_fg = custom_colors.error_fg;
+        cfg.markdown_fg = custom_colors.markdown_fg;
+        cfg.cursor_fg = custom_colors.cursor_fg;
+        cfg.cursor_bg = custom_colors.cursor_bg;
+        cfg.select_bg = custom_colors.select_bg;
+        setConfig(&cfg);
+        savePreferences(font, theme, size);
+    }
+}
+
+void HazelApp::zoomIn() {
+    config_.font_size += 2;
+    setConfig(&config_);
+}
+
+void HazelApp::zoomOut() {
+    if (config_.font_size > 8) config_.font_size -= 2;
+    setConfig(&config_);
+}
+
+void HazelApp::zoomReset() {
+    config_.font_size = 15;
+    setConfig(&config_);
 }

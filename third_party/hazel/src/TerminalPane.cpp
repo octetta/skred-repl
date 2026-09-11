@@ -200,6 +200,25 @@ int TerminalPane::handle(int event) {
             insert_position(prompt_pos_);
             show_insert_position();
             return 1;
+        } else if (key == 's' && (state & FL_COMMAND)) {
+            if (state & FL_SHIFT) app_->promptSaveAs(); else app_->saveFile();
+            return 1;
+        } else if (key == 'o' && (state & FL_COMMAND)) {
+            app_->openFile(); return 1;
+        } else if (key == 'q' && (state & FL_COMMAND)) {
+            app_->tryQuit(); return 1;
+        } else if (key == ',' && (state & FL_COMMAND)) {
+            app_->showPreferences(); return 1;
+        } else if (key == '/' && (state & FL_COMMAND)) {
+            app_->showHelpWindow(); return 1;
+        } else if (key == '=' && (state & FL_COMMAND)) {
+            app_->zoomIn(); return 1;
+        } else if (key == '-' && (state & FL_COMMAND)) {
+            app_->zoomOut(); return 1;
+        } else if (key == '0' && (state & FL_COMMAND)) {
+            app_->zoomReset(); return 1;
+        } else if (key == '`' && (state & FL_CTRL)) {
+            app_->toggleTerminal(); return 1;
         }
     }
     
