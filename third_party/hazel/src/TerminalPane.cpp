@@ -218,11 +218,11 @@ void TerminalPane::draw() {
             fl_font(textfont(), textsize());
             int c_width = fl_width("W");
             
-            fl_color(app_->config_.text_fg);
+            fl_color(app_->config_.cursor_bg);
             fl_rectf(cx, cy, c_width, mMaxsize);
             
             if (c != '\n' && c != '\0' && c != '\r') {
-                fl_color(app_->config_.input_bg);
+                fl_color(app_->config_.cursor_fg);
                 char s[2] = {c, '\0'};
                 fl_draw(s, cx, cy + mMaxsize - fl_descent());
             }

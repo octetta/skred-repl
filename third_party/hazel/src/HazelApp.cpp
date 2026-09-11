@@ -1449,19 +1449,30 @@ void HazelApp::setConfig(const hazel_config_t* config) {
     if (!config) return;
     config_ = *config;
     applyConfig();
+    
+    if (win_) win_->color(config_.input_bg);
+    if (status_bar_) {
+        status_bar_->color(config_.output_bg);
+        status_bar_->labelcolor(config_.text_fg);
+    }
+    if (macro_bar_) macro_bar_->color(config_.output_bg);
+    
     if (editor_) {
+        editor_->color(config_.input_bg);
         editor_->highlight_data(style_buffer_, styletable_, next_style_index_, 'A', 0, 0);
         editor_->textfont(config_.font);
         editor_->textsize(config_.font_size);
-        editor_->cursor_color(config_.text_fg);
+        editor_->cursor_color(config_.cursor_fg);
         editor_->redraw();
     }
     if (terminal_) {
+        terminal_->color(config_.input_bg);
         terminal_->textfont(config_.font);
         terminal_->textsize(config_.font_size);
-        terminal_->cursor_color(config_.text_fg);
+        terminal_->cursor_color(config_.cursor_fg);
         terminal_->redraw();
     }
+    if (win_) win_->redraw();
 }
 
 void HazelApp::clear() {
@@ -1576,7 +1587,7 @@ void HazelApp::savePreferences(const std::string& font_name, int theme, int size
         out << font_name << "\n";
         out << theme << "\n";
         out << size << "\n";
-        out << config_.text_fg << " " << config_.input_bg << " " << config_.output_bg << " " << config_.error_bg << " " << config_.markdown_bg << " " << config_.error_fg << " " << config_.markdown_fg << "\n";
+        out << config_.text_fg << " " << config_.input_bg << " " << config_.output_bg << " " << config_.error_bg << " " << config_.markdown_bg << " " << config_.error_fg << " " << config_.markdown_fg << " " << config_.cursor_fg << " " << config_.cursor_bg << "\n";
     }
 }
 
@@ -1591,13 +1602,17 @@ void HazelApp::loadPreferences() {
         if (in >> size) {
             config_.font_size = size;
         }
-        Fl_Color fg, bg, out_bg, err_bg, md_bg, err_f = FL_DARK_RED, md_f = FL_DARK_GREEN;
+        Fl_Color fg, bg, out_bg, err_bg, md_bg, err_f = FL_DARK_RED, md_f = FL_DARK_GREEN, csr_f = FL_BLACK, csr_b = FL_BLACK;
         bool has_colors = false;
         if (in >> fg >> bg >> out_bg >> err_bg >> md_bg) {
             has_colors = true;
             if (!(in >> err_f >> md_f)) {
                 err_f = FL_DARK_RED;
                 md_f = FL_DARK_GREEN;
+            }
+            if (!(in >> csr_f >> csr_b)) {
+                csr_f = fg;
+                csr_b = fg;
             }
         }
         
@@ -1623,6 +1638,8 @@ void HazelApp::loadPreferences() {
             cfg.markdown_bg = fl_rgb_color(20, 30, 25);
             cfg.error_fg = fl_rgb_color(255, 100, 100);
             cfg.markdown_fg = fl_rgb_color(100, 255, 100);
+            cfg.cursor_fg = fl_rgb_color(255, 255, 255);
+            cfg.cursor_bg = fl_rgb_color(255, 255, 255);
         } else if (theme == 2 && has_colors) { // Custom Theme
             cfg.text_fg = fg;
             cfg.input_bg = bg;
@@ -1631,6 +1648,8 @@ void HazelApp::loadPreferences() {
             cfg.markdown_bg = md_bg;
             cfg.error_fg = err_f;
             cfg.markdown_fg = md_f;
+            cfg.cursor_fg = csr_f;
+            cfg.cursor_bg = csr_b;
         }
         
         setConfig(&cfg);

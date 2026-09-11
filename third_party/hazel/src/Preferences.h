@@ -39,6 +39,8 @@ class PreferencesWindow : public Fl_Double_Window {
     ColorButton* btn_md_;
     ColorButton* btn_err_fg_;
     ColorButton* btn_md_fg_;
+    ColorButton* btn_csr_fg_;
+    ColorButton* btn_csr_bg_;
     
     std::string selected_font_;
     hazel_config_t out_cfg_;
@@ -47,8 +49,10 @@ class PreferencesWindow : public Fl_Double_Window {
     bool applied_ = false;
 
 public:
-    PreferencesWindow(const hazel_config_t& current_cfg) : Fl_Double_Window(420, 460, "Preferences") {
+    PreferencesWindow(const hazel_config_t& current_cfg) : Fl_Double_Window(420, 500, "Preferences") {
         out_cfg_ = current_cfg;
+        const char* current_font_name = Fl::get_font_name(current_cfg.font);
+        if (current_font_name) selected_font_ = current_font_name;
         new Fl_Box(10, 10, 400, 20, "Select Font:");
         font_browser_ = new Fl_Hold_Browser(10, 30, 400, 180);
         font_browser_->has_scrollbar(Fl_Browser_::BOTH);
@@ -72,38 +76,46 @@ public:
         preview_->labelcolor(current_cfg.text_fg);
         preview_->labelsize(current_cfg.font_size);
         
-        custom_group_ = new Fl_Group(10, 330, 400, 80);
-        Fl_Box* clbl = new Fl_Box(10, 350, 60, 20, "Colors:");
+        custom_group_ = new Fl_Group(10, 340, 400, 100);
+        Fl_Box* clbl = new Fl_Box(10, 365, 60, 20, "Colors:");
         clbl->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         
         // Row 1
-        Fl_Box* l1 = new Fl_Box(70, 325, 45, 15, "Text FG"); l1->labelsize(10);
-        btn_fg_ = new ColorButton(70, 340, 45, 20); btn_fg_->my_color = current_cfg.text_fg;
+        Fl_Box* l1 = new Fl_Box(70, 345, 45, 15, "Text FG"); l1->labelsize(10);
+        btn_fg_ = new ColorButton(70, 360, 45, 20); btn_fg_->my_color = current_cfg.text_fg;
         btn_fg_->tooltip("Text Foreground");
         
-        Fl_Box* l6 = new Fl_Box(120, 325, 45, 15, "Err FG"); l6->labelsize(10);
-        btn_err_fg_ = new ColorButton(120, 340, 45, 20); btn_err_fg_->my_color = current_cfg.error_fg;
+        Fl_Box* l6 = new Fl_Box(120, 345, 45, 15, "Err FG"); l6->labelsize(10);
+        btn_err_fg_ = new ColorButton(120, 360, 45, 20); btn_err_fg_->my_color = current_cfg.error_fg;
         btn_err_fg_->tooltip("Error Text Foreground");
         
-        Fl_Box* l7 = new Fl_Box(170, 325, 45, 15, "Note FG"); l7->labelsize(10);
-        btn_md_fg_ = new ColorButton(170, 340, 45, 20); btn_md_fg_->my_color = current_cfg.markdown_fg;
+        Fl_Box* l7 = new Fl_Box(170, 345, 45, 15, "Note FG"); l7->labelsize(10);
+        btn_md_fg_ = new ColorButton(170, 360, 45, 20); btn_md_fg_->my_color = current_cfg.markdown_fg;
         btn_md_fg_->tooltip("Note Text Foreground");
+
+        Fl_Box* l8 = new Fl_Box(220, 345, 45, 15, "Csr FG"); l8->labelsize(10);
+        btn_csr_fg_ = new ColorButton(220, 360, 45, 20); btn_csr_fg_->my_color = current_cfg.cursor_fg;
+        btn_csr_fg_->tooltip("Cursor Foreground");
+
+        Fl_Box* l9 = new Fl_Box(270, 345, 45, 15, "Csr BG"); l9->labelsize(10);
+        btn_csr_bg_ = new ColorButton(270, 360, 45, 20); btn_csr_bg_->my_color = current_cfg.cursor_bg;
+        btn_csr_bg_->tooltip("Cursor Background");
         
         // Row 2
-        Fl_Box* l2 = new Fl_Box(70, 365, 45, 15, "Code BG"); l2->labelsize(10);
-        btn_bg_ = new ColorButton(70, 380, 45, 20); btn_bg_->my_color = current_cfg.input_bg;
+        Fl_Box* l2 = new Fl_Box(70, 390, 45, 15, "Code BG"); l2->labelsize(10);
+        btn_bg_ = new ColorButton(70, 405, 45, 20); btn_bg_->my_color = current_cfg.input_bg;
         btn_bg_->tooltip("Code Block Background");
         
-        Fl_Box* l3 = new Fl_Box(120, 365, 45, 15, "Out BG"); l3->labelsize(10);
-        btn_out_ = new ColorButton(120, 380, 45, 20); btn_out_->my_color = current_cfg.output_bg;
+        Fl_Box* l3 = new Fl_Box(120, 390, 45, 15, "Out BG"); l3->labelsize(10);
+        btn_out_ = new ColorButton(120, 405, 45, 20); btn_out_->my_color = current_cfg.output_bg;
         btn_out_->tooltip("Output Block Background");
         
-        Fl_Box* l4 = new Fl_Box(170, 365, 45, 15, "Err BG"); l4->labelsize(10);
-        btn_err_ = new ColorButton(170, 380, 45, 20); btn_err_->my_color = current_cfg.error_bg;
+        Fl_Box* l4 = new Fl_Box(170, 390, 45, 15, "Err BG"); l4->labelsize(10);
+        btn_err_ = new ColorButton(170, 405, 45, 20); btn_err_->my_color = current_cfg.error_bg;
         btn_err_->tooltip("Error Block Background");
         
-        Fl_Box* l5 = new Fl_Box(220, 365, 45, 15, "Note BG"); l5->labelsize(10);
-        btn_md_ = new ColorButton(220, 380, 45, 20); btn_md_->my_color = current_cfg.markdown_bg;
+        Fl_Box* l5 = new Fl_Box(220, 390, 45, 15, "Note BG"); l5->labelsize(10);
+        btn_md_ = new ColorButton(220, 405, 45, 20); btn_md_->my_color = current_cfg.markdown_bg;
         btn_md_->tooltip("Note Block Background");
         
         custom_group_->end();
@@ -128,12 +140,13 @@ public:
         btn_out_->callback(color_cb, this);
         btn_err_->callback(color_cb, this);
         btn_md_->callback(color_cb, this);
+        btn_csr_fg_->callback(color_cb, this);
+        btn_csr_bg_->callback(color_cb, this);
 
-        cancel_ = new Fl_Button(240, 415, 80, 30, "Cancel");
-        ok_ = new Fl_Button(330, 415, 80, 30, "OK");
+        cancel_ = new Fl_Button(240, 455, 80, 30, "Cancel");
+        ok_ = new Fl_Button(330, 455, 80, 30, "OK");
         
         int num_fonts = Fl::set_fonts("-*");
-        const char* current_font_name = Fl::get_font_name(current_cfg.font);
         int selected_idx = 1;
         for (int i = 0; i < num_fonts; i++) {
             const char* name = Fl::get_font_name((Fl_Font)i);
@@ -242,6 +255,8 @@ public:
             self->out_cfg_.text_fg = self->btn_fg_->my_color;
             self->out_cfg_.error_fg = self->btn_err_fg_->my_color;
             self->out_cfg_.markdown_fg = self->btn_md_fg_->my_color;
+            self->out_cfg_.cursor_fg = self->btn_csr_fg_->my_color;
+            self->out_cfg_.cursor_bg = self->btn_csr_bg_->my_color;
             self->out_cfg_.input_bg = self->btn_bg_->my_color;
             self->out_cfg_.output_bg = self->btn_out_->my_color;
             self->out_cfg_.error_bg = self->btn_err_->my_color;
