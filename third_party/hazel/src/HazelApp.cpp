@@ -28,8 +28,8 @@ public:
             Fl_Button* btn = new Fl_Button(start_x, Y + 5, btn_w, 20);
             btn->copy_label(name);
             btn->labelsize(12);
-            btn->box(FL_FLAT_BOX);
-            btn->color(fl_rgb_color(220, 220, 230));
+            btn->box(FL_THIN_UP_BOX);
+            btn->color(fl_rgb_color(205, 205, 215));
             btn->selection_color(FL_DARK2);
             btn->callback([](Fl_Widget* w, void* v) {
                 HazelApp* app = (HazelApp*)v;
@@ -57,7 +57,7 @@ public:
         box(FL_FLAT_BOX);
     }
     
-    void drawKeyRight(int& cur_x, int cur_y, const char* mod, const char* key, const char* label) {
+    void drawKeyLeft(int& cur_x, int cur_y, const char* mod, const char* key, const char* label) {
         fl_font(FL_HELVETICA, 12);
         int lbl_w = 0, lbl_h = 0;
         fl_measure(label, lbl_w, lbl_h);
@@ -71,11 +71,9 @@ public:
         fl_measure(key, key_w, key_h);
         key_w += 10;
         
-        // Advance cur_x leftwards
         int total_w = mod_w + 2 + key_w + 6 + lbl_w + 12;
-        cur_x -= total_w;
-        
         int draw_x = cur_x;
+        cur_x += total_w; // Advance rightwards
         
         // Mod (e.g. CTRL)
         fl_color(FL_BLACK);
@@ -110,8 +108,8 @@ public:
         fl_color(FL_DARK3);
         fl_draw(app_->status_info_.c_str(), cur_x, cur_y + 36);
         
-        // Draw keys starting from the far right edge!
-        int right_x = x() + w() - 10;
+        // Draw keys starting from the far left edge!
+        int left_x = x() + 10;
         
         #ifdef __APPLE__
         const char* cmd = "CMD";
@@ -119,17 +117,17 @@ public:
         const char* cmd = "CTRL";
         #endif
         
-        drawKeyRight(right_x, cur_y, cmd, "R", "RunAll");
-        drawKeyRight(right_x, cur_y, cmd, "RET", "Eval");
         if (app_->getConfig().parser_mode != 1) {
-            drawKeyRight(right_x, cur_y, "ALT", "RET", "Split");
+            drawKeyLeft(left_x, cur_y, cmd, "U", "Mkdn");
+            drawKeyLeft(left_x, cur_y, cmd, "Y", "Code");
         }
-        drawKeyRight(right_x, cur_y, cmd, "D", "Delete");
-        drawKeyRight(right_x, cur_y, cmd, "~", "Terminal");
+        drawKeyLeft(left_x, cur_y, cmd, "~", "Terminal");
+        drawKeyLeft(left_x, cur_y, cmd, "D", "Delete");
         if (app_->getConfig().parser_mode != 1) {
-            drawKeyRight(right_x, cur_y, cmd, "U", "Mkdn");
-            drawKeyRight(right_x, cur_y, cmd, "Y", "Code");
+            drawKeyLeft(left_x, cur_y, "ALT", "RET", "Split");
         }
+        drawKeyLeft(left_x, cur_y, cmd, "RET", "Eval");
+        drawKeyLeft(left_x, cur_y, cmd, "R", "RunAll");
     }
 };
 
@@ -1114,6 +1112,7 @@ void HazelEditor::draw() {
     
     int y_start = this->y();
     int y_end = this->y() + this->h();
+    if (mHScrollBar && mHScrollBar->visible()) y_end -= mHScrollBar->h();
     
     auto getEffectiveStyleAt = [&](int p) -> char {
         if (p < 0) return 'A';
@@ -1217,7 +1216,7 @@ void HazelEditor::draw() {
                 
                 char badge[16];
                 if (curr_type == 0) snprintf(badge, sizeof(badge), "C%d", block_idx);
-                else if (curr_type == 1) snprintf(badge, sizeof(badge), "M%d", block_idx);
+                else if (curr_type == 1) snprintf(badge, sizeof(badge), (app_->getConfig().parser_mode == 1) ? "N%d" : "M%d", block_idx);
                 else snprintf(badge, sizeof(badge), "O%d", block_idx);
                 
                 if (line_start > 0) {
@@ -1278,7 +1277,7 @@ void HazelApp::updateStatusBar() {
     }
     
     const char* mode = "Code";
-    if (style == 'D') mode = "Markdown";
+    if (style == 'D') mode = (config_.parser_mode == 1) ? "Note" : "Markdown";
     else if (isOutputStyle(style)) mode = "Output";
     
     char target_block = isOutputStyle(style) ? 'B' : style;
