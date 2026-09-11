@@ -102,6 +102,11 @@ int main(int argc, char** argv) {
     config.output_bg = fl_rgb_color(245, 245, 250);
     config.error_bg = fl_rgb_color(255, 235, 235);
     config.markdown_bg = fl_rgb_color(245, 255, 245);
+    config.error_fg = FL_DARK_RED;
+    config.markdown_fg = FL_DARK_GREEN;
+    config.cursor_fg = FL_WHITE;
+    config.cursor_bg = FL_BLACK;
+    config.select_bg = fl_rgb_color(180, 200, 255);
     config.parser_mode = 1;
     config.on_open = my_load_cb;
     config.on_save = my_save_cb;
