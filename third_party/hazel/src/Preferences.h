@@ -81,7 +81,7 @@ public:
         Fl_Box* clbl = new Fl_Box(10, 365, 60, 20, "Colors:");
         clbl->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         
-        // Row 1
+        // Row 1 (Foregrounds)
         Fl_Box* l1 = new Fl_Box(70, 345, 45, 15, "Text FG"); l1->labelsize(10);
         btn_fg_ = new ColorButton(70, 360, 45, 20); btn_fg_->my_color = current_cfg.text_fg;
         btn_fg_->tooltip("Text Foreground");
@@ -97,30 +97,30 @@ public:
         Fl_Box* l8 = new Fl_Box(220, 345, 45, 15, "Csr FG"); l8->labelsize(10);
         btn_csr_fg_ = new ColorButton(220, 360, 45, 20); btn_csr_fg_->my_color = current_cfg.cursor_fg;
         btn_csr_fg_->tooltip("Cursor Foreground");
-
-        Fl_Box* l9 = new Fl_Box(270, 345, 45, 15, "Csr BG"); l9->labelsize(10);
-        btn_csr_bg_ = new ColorButton(270, 360, 45, 20); btn_csr_bg_->my_color = current_cfg.cursor_bg;
-        btn_csr_bg_->tooltip("Cursor Background");
         
-        // Row 2
+        // Row 2 (Backgrounds)
         Fl_Box* l2 = new Fl_Box(70, 390, 45, 15, "Code BG"); l2->labelsize(10);
         btn_bg_ = new ColorButton(70, 405, 45, 20); btn_bg_->my_color = current_cfg.input_bg;
         btn_bg_->tooltip("Code Block Background");
         
-        Fl_Box* l3 = new Fl_Box(120, 390, 45, 15, "Out BG"); l3->labelsize(10);
-        btn_out_ = new ColorButton(120, 405, 45, 20); btn_out_->my_color = current_cfg.output_bg;
-        btn_out_->tooltip("Output Block Background");
-        
-        Fl_Box* l4 = new Fl_Box(170, 390, 45, 15, "Err BG"); l4->labelsize(10);
-        btn_err_ = new ColorButton(170, 405, 45, 20); btn_err_->my_color = current_cfg.error_bg;
+        Fl_Box* l4 = new Fl_Box(120, 390, 45, 15, "Err BG"); l4->labelsize(10);
+        btn_err_ = new ColorButton(120, 405, 45, 20); btn_err_->my_color = current_cfg.error_bg;
         btn_err_->tooltip("Error Block Background");
         
-        Fl_Box* l5 = new Fl_Box(220, 390, 45, 15, "Note BG"); l5->labelsize(10);
-        btn_md_ = new ColorButton(220, 405, 45, 20); btn_md_->my_color = current_cfg.markdown_bg;
+        Fl_Box* l5 = new Fl_Box(170, 390, 45, 15, "Note BG"); l5->labelsize(10);
+        btn_md_ = new ColorButton(170, 405, 45, 20); btn_md_->my_color = current_cfg.markdown_bg;
         btn_md_->tooltip("Note Block Background");
         
-        Fl_Box* l10 = new Fl_Box(270, 390, 45, 15, "Sel BG"); l10->labelsize(10);
-        btn_sel_bg_ = new ColorButton(270, 405, 45, 20); btn_sel_bg_->my_color = current_cfg.select_bg;
+        Fl_Box* l9 = new Fl_Box(220, 390, 45, 15, "Csr BG"); l9->labelsize(10);
+        btn_csr_bg_ = new ColorButton(220, 405, 45, 20); btn_csr_bg_->my_color = current_cfg.cursor_bg;
+        btn_csr_bg_->tooltip("Cursor Background");
+        
+        Fl_Box* l3 = new Fl_Box(270, 390, 45, 15, "Out BG"); l3->labelsize(10);
+        btn_out_ = new ColorButton(270, 405, 45, 20); btn_out_->my_color = current_cfg.output_bg;
+        btn_out_->tooltip("Output Block Background");
+
+        Fl_Box* l10 = new Fl_Box(320, 390, 45, 15, "Sel BG"); l10->labelsize(10);
+        btn_sel_bg_ = new ColorButton(320, 405, 45, 20); btn_sel_bg_->my_color = current_cfg.select_bg;
         btn_sel_bg_->tooltip("Selection Background");
         
         custom_group_->end();

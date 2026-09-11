@@ -686,13 +686,19 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     buffer_ = new Fl_Text_Buffer();
     style_buffer_ = new Fl_Text_Buffer();
     
+    config_.theme = 0;
     config_.font = FL_COURIER;
     config_.font_size = 14;
     config_.input_bg = FL_WHITE;
-    config_.output_bg = fl_rgb_color(240, 240, 245);
-    config_.error_bg = fl_rgb_color(255, 230, 230);
-    config_.markdown_bg = fl_rgb_color(240, 255, 240);
+    config_.output_bg = fl_rgb_color(245, 245, 250);
+    config_.error_bg = fl_rgb_color(255, 235, 235);
+    config_.markdown_bg = fl_rgb_color(245, 255, 245);
     config_.text_fg = FL_BLACK;
+    config_.error_fg = FL_DARK_RED;
+    config_.markdown_fg = FL_DARK_GREEN;
+    config_.cursor_fg = FL_WHITE;
+    config_.cursor_bg = FL_BLACK;
+    config_.select_bg = fl_rgb_color(180, 200, 255);
     
     applyConfig();
     
