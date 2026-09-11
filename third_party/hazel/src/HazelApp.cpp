@@ -1662,6 +1662,16 @@ void HazelApp::loadPreferences() {
             cfg.markdown_fg = md_f;
             cfg.cursor_fg = csr_f;
             cfg.cursor_bg = csr_b;
+        } else if (theme == 2 && !has_colors) { // Default Solarized for Custom
+            cfg.text_fg = fl_rgb_color(131, 148, 150);
+            cfg.input_bg = fl_rgb_color(0, 43, 54);
+            cfg.output_bg = fl_rgb_color(7, 54, 66);
+            cfg.error_bg = fl_rgb_color(220, 50, 47);
+            cfg.markdown_bg = fl_rgb_color(7, 54, 66);
+            cfg.error_fg = fl_rgb_color(0, 43, 54);
+            cfg.markdown_fg = fl_rgb_color(147, 161, 161);
+            cfg.cursor_fg = fl_rgb_color(0, 43, 54);
+            cfg.cursor_bg = fl_rgb_color(181, 137, 0);
         }
         
         setConfig(&cfg);

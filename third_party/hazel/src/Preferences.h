@@ -209,15 +209,55 @@ public:
             int t = self->theme_choice_->value();
             if (t == 2) {
                 self->custom_group_->show();
+                bool is_light = (self->btn_bg_->my_color == FL_WHITE);
+                bool is_dark = (self->btn_bg_->my_color == fl_rgb_color(25, 25, 30));
+                if (is_light || is_dark) { // Seed Solarized
+                    self->btn_fg_->my_color = fl_rgb_color(131, 148, 150);
+                    self->btn_bg_->my_color = fl_rgb_color(0, 43, 54);
+                    self->btn_out_->my_color = fl_rgb_color(7, 54, 66);
+                    self->btn_err_->my_color = fl_rgb_color(220, 50, 47);
+                    self->btn_md_->my_color = fl_rgb_color(7, 54, 66);
+                    self->btn_err_fg_->my_color = fl_rgb_color(0, 43, 54);
+                    self->btn_md_fg_->my_color = fl_rgb_color(147, 161, 161);
+                    self->btn_csr_fg_->my_color = fl_rgb_color(0, 43, 54);
+                    self->btn_csr_bg_->my_color = fl_rgb_color(181, 137, 0);
+                    
+                    self->btn_fg_->redraw(); self->btn_bg_->redraw(); self->btn_out_->redraw();
+                    self->btn_err_->redraw(); self->btn_md_->redraw(); self->btn_err_fg_->redraw();
+                    self->btn_md_fg_->redraw(); self->btn_csr_fg_->redraw(); self->btn_csr_bg_->redraw();
+                    self->preview_->color(self->btn_bg_->my_color);
+                    self->preview_->labelcolor(self->btn_fg_->my_color);
+                    self->preview_->redraw();
+                }
             } else {
                 self->custom_group_->hide();
-                if (t == 0) {
-                    self->preview_->color(FL_WHITE);
-                    self->preview_->labelcolor(FL_BLACK);
-                } else if (t == 1) {
-                    self->preview_->color(fl_rgb_color(30, 30, 30));
-                    self->preview_->labelcolor(fl_rgb_color(220, 220, 220));
+                if (t == 0) { // Light
+                    self->btn_fg_->my_color = FL_BLACK;
+                    self->btn_bg_->my_color = FL_WHITE;
+                    self->btn_out_->my_color = fl_rgb_color(245, 245, 250);
+                    self->btn_err_->my_color = fl_rgb_color(255, 235, 235);
+                    self->btn_md_->my_color = fl_rgb_color(245, 255, 245);
+                    self->btn_err_fg_->my_color = FL_DARK_RED;
+                    self->btn_md_fg_->my_color = FL_DARK_GREEN;
+                    self->btn_csr_fg_->my_color = FL_WHITE;
+                    self->btn_csr_bg_->my_color = FL_BLACK;
+                } else if (t == 1) { // Dark
+                    self->btn_fg_->my_color = fl_rgb_color(220, 220, 220);
+                    self->btn_bg_->my_color = fl_rgb_color(25, 25, 30);
+                    self->btn_out_->my_color = fl_rgb_color(15, 15, 20);
+                    self->btn_err_->my_color = fl_rgb_color(40, 10, 10);
+                    self->btn_md_->my_color = fl_rgb_color(20, 30, 25);
+                    self->btn_err_fg_->my_color = fl_rgb_color(255, 100, 100);
+                    self->btn_md_fg_->my_color = fl_rgb_color(100, 255, 100);
+                    self->btn_csr_fg_->my_color = fl_rgb_color(25, 25, 30);
+                    self->btn_csr_bg_->my_color = fl_rgb_color(220, 220, 220);
                 }
+                self->btn_fg_->redraw(); self->btn_bg_->redraw(); self->btn_out_->redraw();
+                self->btn_err_->redraw(); self->btn_md_->redraw(); self->btn_err_fg_->redraw();
+                self->btn_md_fg_->redraw(); self->btn_csr_fg_->redraw(); self->btn_csr_bg_->redraw();
+                
+                self->preview_->color(self->btn_bg_->my_color);
+                self->preview_->labelcolor(self->btn_fg_->my_color);
                 self->preview_->redraw();
             }
         }, this);
