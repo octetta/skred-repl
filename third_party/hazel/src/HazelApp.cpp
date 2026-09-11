@@ -539,6 +539,7 @@ int HazelEditor::handle(int event) {
                 cfg.markdown_fg = custom_colors.markdown_fg;
                 cfg.cursor_fg = custom_colors.cursor_fg;
                 cfg.cursor_bg = custom_colors.cursor_bg;
+                cfg.select_bg = custom_colors.select_bg;
                 app_->setConfig(&cfg);
                 app_->savePreferences(font, theme, size);
             }
@@ -727,7 +728,7 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     editor_ = new HazelEditor(0, 0, 800, 575, this);
     editor_->buffer(buffer_);
     editor_->box(FL_FLAT_BOX);
-    editor_->cursor_style(Fl_Text_Display::SIMPLE_CURSOR);
+    editor_->cursor_style(Fl_Text_Display::BLOCK_CURSOR);
     editor_->highlight_data(style_buffer_, styletable_, next_style_index_, 'A', 0, 0);
     
     terminal_ = new TerminalPane(0, 400, 800, 175, this);
@@ -1454,6 +1455,8 @@ void HazelApp::setConfig(const hazel_config_t* config) {
         editor_->textfont(config_.font);
         editor_->textsize(config_.font_size);
         editor_->cursor_color(config_.cursor_bg);
+        editor_->cursor_style(Fl_Text_Display::BLOCK_CURSOR);
+        editor_->selection_color(config_.select_bg);
         editor_->hide_cursor();
         editor_->show_cursor();
         editor_->redraw();
@@ -1463,6 +1466,7 @@ void HazelApp::setConfig(const hazel_config_t* config) {
         terminal_->textfont(config_.font);
         terminal_->textsize(config_.font_size);
         terminal_->cursor_color(config_.cursor_bg);
+        terminal_->selection_color(config_.select_bg);
         terminal_->redraw();
     }
     if (win_) win_->redraw();
@@ -1580,7 +1584,7 @@ void HazelApp::savePreferences(const std::string& font_name, int theme, int size
         out << font_name << "\n";
         out << theme << "\n";
         out << size << "\n";
-        out << config_.text_fg << " " << config_.input_bg << " " << config_.output_bg << " " << config_.error_bg << " " << config_.markdown_bg << " " << config_.error_fg << " " << config_.markdown_fg << " " << config_.cursor_fg << " " << config_.cursor_bg << "\n";
+        out << config_.text_fg << " " << config_.input_bg << " " << config_.output_bg << " " << config_.error_bg << " " << config_.markdown_bg << " " << config_.error_fg << " " << config_.markdown_fg << " " << config_.cursor_fg << " " << config_.cursor_bg << " " << config_.select_bg << "\n";
     }
 }
 
@@ -1607,6 +1611,11 @@ void HazelApp::loadPreferences() {
                 csr_f = fg;
                 csr_b = fg;
             }
+            Fl_Color sel_b = FL_SELECTION_COLOR;
+            if (!(in >> sel_b)) sel_b = fl_rgb_color(180, 200, 255);
+            config_.select_bg = sel_b; // Temporary save to config_ so it propagates
+        } else {
+            config_.select_bg = fl_rgb_color(180, 200, 255);
         }
         
         hazel_config_t cfg = config_;
@@ -1633,6 +1642,7 @@ void HazelApp::loadPreferences() {
             cfg.markdown_fg = md_f;
             cfg.cursor_fg = csr_f;
             cfg.cursor_bg = csr_b;
+            cfg.select_bg = config_.select_bg; // Use saved
         } else {
             if (theme == 1) { // Dark Theme fallback
                 cfg.text_fg = fl_rgb_color(220, 220, 220);
@@ -1644,6 +1654,7 @@ void HazelApp::loadPreferences() {
                 cfg.markdown_fg = fl_rgb_color(100, 255, 100);
                 cfg.cursor_fg = fl_rgb_color(25, 25, 30);
                 cfg.cursor_bg = fl_rgb_color(220, 220, 220);
+                cfg.select_bg = fl_rgb_color(60, 60, 80);
             } else if (theme == 2) { // Custom Theme fallback (Solarized)
                 cfg.text_fg = fl_rgb_color(131, 148, 150);
                 cfg.input_bg = fl_rgb_color(0, 43, 54);
@@ -1654,6 +1665,7 @@ void HazelApp::loadPreferences() {
                 cfg.markdown_fg = fl_rgb_color(147, 161, 161);
                 cfg.cursor_fg = fl_rgb_color(0, 43, 54);
                 cfg.cursor_bg = fl_rgb_color(181, 137, 0);
+                cfg.select_bg = fl_rgb_color(7, 54, 66);
             }
         }
         

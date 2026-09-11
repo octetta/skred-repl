@@ -41,6 +41,7 @@ class PreferencesWindow : public Fl_Double_Window {
     ColorButton* btn_md_fg_;
     ColorButton* btn_csr_fg_;
     ColorButton* btn_csr_bg_;
+    ColorButton* btn_sel_bg_;
     
     std::string selected_font_;
     hazel_config_t out_cfg_;
@@ -118,6 +119,10 @@ public:
         btn_md_ = new ColorButton(220, 405, 45, 20); btn_md_->my_color = current_cfg.markdown_bg;
         btn_md_->tooltip("Note Block Background");
         
+        Fl_Box* l10 = new Fl_Box(270, 390, 45, 15, "Sel BG"); l10->labelsize(10);
+        btn_sel_bg_ = new ColorButton(270, 405, 45, 20); btn_sel_bg_->my_color = current_cfg.select_bg;
+        btn_sel_bg_->tooltip("Selection Background");
+        
         custom_group_->end();
         
         auto color_cb = [](Fl_Widget* w, void* v) {
@@ -142,6 +147,7 @@ public:
         btn_md_->callback(color_cb, this);
         btn_csr_fg_->callback(color_cb, this);
         btn_csr_bg_->callback(color_cb, this);
+        btn_sel_bg_->callback(color_cb, this);
 
         cancel_ = new Fl_Button(240, 455, 80, 30, "Cancel");
         ok_ = new Fl_Button(330, 455, 80, 30, "OK");
@@ -218,10 +224,11 @@ public:
                     self->btn_md_fg_->my_color = fl_rgb_color(147, 161, 161);
                     self->btn_csr_fg_->my_color = fl_rgb_color(0, 43, 54);
                     self->btn_csr_bg_->my_color = fl_rgb_color(181, 137, 0);
+                    self->btn_sel_bg_->my_color = fl_rgb_color(7, 54, 66);
                     
                     self->btn_fg_->redraw(); self->btn_bg_->redraw(); self->btn_out_->redraw();
                     self->btn_err_->redraw(); self->btn_md_->redraw(); self->btn_err_fg_->redraw();
-                    self->btn_md_fg_->redraw(); self->btn_csr_fg_->redraw(); self->btn_csr_bg_->redraw();
+                    self->btn_md_fg_->redraw(); self->btn_csr_fg_->redraw(); self->btn_csr_bg_->redraw(); self->btn_sel_bg_->redraw();
                     self->preview_->color(self->btn_bg_->my_color);
                     self->preview_->labelcolor(self->btn_fg_->my_color);
                     self->preview_->redraw();
@@ -237,6 +244,7 @@ public:
                     self->btn_md_fg_->my_color = FL_DARK_GREEN;
                     self->btn_csr_fg_->my_color = FL_WHITE;
                     self->btn_csr_bg_->my_color = FL_BLACK;
+                    self->btn_sel_bg_->my_color = fl_rgb_color(180, 200, 255);
                 } else if (t == 1) { // Dark
                     self->btn_fg_->my_color = fl_rgb_color(220, 220, 220);
                     self->btn_bg_->my_color = fl_rgb_color(25, 25, 30);
@@ -247,10 +255,11 @@ public:
                     self->btn_md_fg_->my_color = fl_rgb_color(100, 255, 100);
                     self->btn_csr_fg_->my_color = fl_rgb_color(25, 25, 30);
                     self->btn_csr_bg_->my_color = fl_rgb_color(220, 220, 220);
+                    self->btn_sel_bg_->my_color = fl_rgb_color(60, 60, 80);
                 }
                 self->btn_fg_->redraw(); self->btn_bg_->redraw(); self->btn_out_->redraw();
                 self->btn_err_->redraw(); self->btn_md_->redraw(); self->btn_err_fg_->redraw();
-                self->btn_md_fg_->redraw(); self->btn_csr_fg_->redraw(); self->btn_csr_bg_->redraw();
+                self->btn_md_fg_->redraw(); self->btn_csr_fg_->redraw(); self->btn_csr_bg_->redraw(); self->btn_sel_bg_->redraw();
                 
                 self->preview_->color(self->btn_bg_->my_color);
                 self->preview_->labelcolor(self->btn_fg_->my_color);
@@ -293,6 +302,7 @@ public:
             self->out_cfg_.markdown_fg = self->btn_md_fg_->my_color;
             self->out_cfg_.cursor_fg = self->btn_csr_fg_->my_color;
             self->out_cfg_.cursor_bg = self->btn_csr_bg_->my_color;
+            self->out_cfg_.select_bg = self->btn_sel_bg_->my_color;
             self->out_cfg_.input_bg = self->btn_bg_->my_color;
             self->out_cfg_.output_bg = self->btn_out_->my_color;
             self->out_cfg_.error_bg = self->btn_err_->my_color;

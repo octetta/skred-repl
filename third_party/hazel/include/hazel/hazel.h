@@ -26,6 +26,7 @@ typedef struct {
     unsigned int markdown_fg;
     unsigned int cursor_fg;
     unsigned int cursor_bg;
+    unsigned int select_bg;
     int parser_mode; // 0 = default, 1 = skred-repl contiguous mode
     int (*on_open)(hazel_app_t* app, const char* filepath, void* user_data);
     int (*on_save)(hazel_app_t* app, const char* filepath, void* user_data);
