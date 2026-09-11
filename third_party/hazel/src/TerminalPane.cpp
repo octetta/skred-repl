@@ -117,6 +117,16 @@ void TerminalPane::evaluateCommand() {
 }
 
 int TerminalPane::handle(int event) {
+    if (event == FL_PUSH || event == FL_DRAG || event == FL_RELEASE) {
+        if (mVScrollBar && mVScrollBar->visible() && Fl::event_x() >= mVScrollBar->x()) {
+            return Fl_Text_Editor::handle(event);
+        }
+        if (event == FL_PUSH) {
+            this->take_focus();
+        }
+        return 1;
+    }
+    
     if (event == FL_KEYBOARD || event == FL_SHORTCUT) {
         int key = Fl::event_key();
         int state = Fl::event_state();
