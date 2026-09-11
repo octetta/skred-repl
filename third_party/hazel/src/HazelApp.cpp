@@ -196,6 +196,7 @@ public:
             "  Cmd/Ctrl + S : Save File\n"
             "  Cmd/Ctrl + Shift + S : Save As...\n"
             "  Cmd/Ctrl + O : Open File\n"
+            "  Cmd/Ctrl + Shift + O : Open Folder (CWD)\n"
             "  Cmd/Ctrl + , : Preferences\n"
             "  Cmd/Ctrl + / : Help / About\n\n"
             "  Cmd/Ctrl + = / - / 0 : Zoom In / Out / Reset\n\n"
@@ -361,7 +362,11 @@ int HazelEditor::handle(int event) {
             }
             return 1;
         } else if (key == 'o' && (Fl::event_state() & FL_COMMAND)) {
-            app_->openFile();
+            if (Fl::event_state() & FL_SHIFT) {
+                app_->openDirectory();
+            } else {
+                app_->openFile();
+            }
             return 1;
         } else if (key == 'd' && (Fl::event_state() & FL_COMMAND)) {
             int pos = insert_position();
@@ -807,6 +812,17 @@ void HazelApp::openFile() {
     fnfc.filter("Notebook Files\t*.{md,sk}\nMarkdown\t*.md\nSkred Script\t*.sk\nAll Files\t*");
     if (fnfc.show() == 0) {
         loadFile(fnfc.filename());
+    }
+}
+
+void HazelApp::openDirectory() {
+    Fl_Native_File_Chooser fnfc;
+    fnfc.title("Open Folder / Set Working Directory");
+    fnfc.type(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
+    if (fnfc.show() == 0) {
+        if (config_.on_open_dir) {
+            config_.on_open_dir((hazel_app_t*)this, fnfc.filename(), user_data_);
+        }
     }
 }
 void HazelApp::saveFileAs(const char* filepath) {

@@ -50,6 +50,7 @@ public:
     void savePreferences(const std::string& font, int theme, int size);
     
     void openFile();
+    void openDirectory();
     void saveFile();
     void promptSaveAs();
     void toggleTerminal();

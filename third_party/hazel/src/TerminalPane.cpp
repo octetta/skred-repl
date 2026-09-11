@@ -204,7 +204,8 @@ int TerminalPane::handle(int event) {
             if (state & FL_SHIFT) app_->promptSaveAs(); else app_->saveFile();
             return 1;
         } else if (key == 'o' && (state & FL_COMMAND)) {
-            app_->openFile(); return 1;
+            if (state & FL_SHIFT) app_->openDirectory(); else app_->openFile();
+            return 1;
         } else if (key == 'q' && (state & FL_COMMAND)) {
             app_->tryQuit(); return 1;
         } else if (key == ',' && (state & FL_COMMAND)) {

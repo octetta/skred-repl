@@ -5,8 +5,34 @@
 #include "skred/api.h"
 #include <FL/Fl.H>
 
+#include <unistd.h> // For chdir()
+
 int my_load_cb(hazel_app_t* app, const char* filepath, void* user_data) { 
     size_t f_len = strlen(filepath);
+    
+    // ========================================================================
+    // GENERAL FILE OPEN HOOK:
+    // Here you can intercept files chosen by the user in the Open File dialog.
+    // If it's a ".sk" file, we load it into the notebook.
+    // If it's a ".zip", ".wav", or ".ksynth", you can call the skred API 
+    // to load them here, then return 1 (success) without altering the notebook.
+    // ========================================================================
+    
+    if (f_len >= 4 && strcmp(filepath + f_len - 4, ".wav") == 0) {
+        // e.g. skred_command_sprintf("load_wav('%s')", filepath);
+        // printf("Loaded waveform: %s\n", filepath);
+        return 1;
+    }
+    if (f_len >= 4 && strcmp(filepath + f_len - 4, ".zip") == 0) {
+        // e.g. skred_command_sprintf("load_zip('%s')", filepath);
+        return 1;
+    }
+    if (f_len >= 7 && strcmp(filepath + f_len - 7, ".ksynth") == 0) {
+        // e.g. skred_command_sprintf("load_ksynth('%s')", filepath);
+        return 1;
+    }
+    
+    // Proceed with normal ".sk" load
     if (f_len < 3 || strcmp(filepath + f_len - 3, ".sk") != 0) return 0;
     
     FILE* f = fopen(filepath, "r");
@@ -56,6 +82,20 @@ int my_save_cb(hazel_app_t* app, const char* filepath, void* user_data) {
     hazel_set_filepath(app, filepath);
     hazel_set_dirty(app, 0);
     return 1;
+}
+
+// ========================================================================
+// OPEN FOLDER / SET CWD HOOK:
+// Triggered by Cmd/Ctrl + Shift + O in the Hazel UI.
+// ========================================================================
+int my_dir_cb(hazel_app_t* app, const char* dirpath, void* user_data) {
+    if (chdir(dirpath) == 0) {
+        // Optionally tell skred backend about the path change
+        // e.g. skred_command_sprintf("set_cwd('%s')", dirpath);
+        printf("Changed Working Directory to: %s\n", dirpath);
+        return 1;
+    }
+    return 0; // Failed
 }
 
 void my_eval_engine(const char* input, hazel_ctx_t* ctx, void* user_data) {
@@ -133,6 +173,7 @@ int main(int argc, char** argv) {
     config.parser_mode = 1;
     config.on_open = my_load_cb;
     config.on_save = my_save_cb;
+    config.on_open_dir = my_dir_cb;
     hazel_set_config(app, &config);
     hazel_load_preferences(app);
     
