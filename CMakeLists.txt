@@ -30,7 +30,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(skred_api)
 
-add_executable(skred-repl src/main.cpp)
+add_executable(skred-repl MACOSX_BUNDLE WIN32 src/main.cpp)
 target_include_directories(skred-repl PRIVATE ${skred_api_SOURCE_DIR}/include)
 
 if(WIN32)

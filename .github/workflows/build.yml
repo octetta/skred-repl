@@ -1,52 +1,180 @@
-name: Build skred-repl
+name: One-Click Multi-Platform Release
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  release:
-    types: [published]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (e.g. v0.1.2). Required for manual runs.'
+        required: true
+        default: 'v0.1.2'
+
+permissions:
+  contents: write
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    
+    name: Build (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}
-    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+          - os: macos-latest
+            platform: macos-universal
+          - os: windows-latest
+            platform: windows-x86_64
+
+    defaults:
+      run:
+        shell: bash
+
     steps:
-    - uses: actions/checkout@v4
-      
-    - name: Install dependencies (Linux)
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libasound2-dev libfltk1.3-dev libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxrender-dev libxfixes-dev ninja-build cmake
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Install dependencies (macOS)
-      if: runner.os == 'macOS'
-      run: |
-        brew install fltk cmake ninja
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          else
+            TAG="${{ github.ref_name }}"
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG version=$VERSION"
 
-    - name: Install dependencies (Windows)
-      if: runner.os == 'Windows'
-      # Assuming vcpkg or similar for FLTK, or downloading prebuilt
-      # For now, using MSYS2 or vcpkg would be standard
-      run: |
-        echo "Windows FLTK setup goes here"
+      - name: Install Linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential cmake ninja-build pkg-config git curl \
+            libx11-dev libxft-dev libxcursor-dev libxinerama-dev libxrender-dev \
+            libpng-dev libjpeg-dev libfreetype6-dev libasound2-dev libxext-dev libxfixes-dev
 
-    - name: Configure CMake
-      run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Install Ninja (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install ninja -y
 
-    - name: Build
-      run: cmake --build build --config Release
+      - name: Configure & build (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target skred-repl -j
+          test -x build/skred-repl
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: skred-repl-${{ runner.os }}
-        path: |
-          build/skred-repl
-          build/skred-repl.exe
+      - name: Configure & build (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0
+          cmake --build build --target skred-repl -j
+          codesign --force --deep --sign - build/skred-repl.app || true
+          test -d build/skred-repl.app
+
+      - name: Configure & build (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --target skred-repl -j
+          dir /s /b build\skred-repl.exe
+
+      - name: Package
+        if: runner.os != 'Windows'
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.ver.outputs.version }}"
+          PLATFORM="${{ matrix.platform }}"
+          NAME="skred-repl-${VERSION}-${PLATFORM}"
+          mkdir -p "pkg/${NAME}"
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            cp -a build/skred-repl.app "pkg/${NAME}/"
+          else
+            cp -v build/skred-repl "pkg/${NAME}/"
+          fi
+          tar -C pkg -czf "${NAME}.tar.gz" "${NAME}"
+          sha256sum "${NAME}.tar.gz" > "${NAME}.tar.gz.sha256"
+          ls -lh "${NAME}.tar.gz"
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $VERSION = "${{ steps.ver.outputs.version }}"
+          $PLATFORM = "${{ matrix.platform }}"
+          $NAME = "skred-repl-$VERSION-$PLATFORM"
+          New-Item -ItemType Directory -Force -Path "pkg/$NAME" | Out-Null
+          $exe = Get-ChildItem -Path build -Recurse -Filter skred-repl.exe | Select-Object -First 1
+          if (-not $exe) { throw "skred-repl.exe not found" }
+          Copy-Item $exe.FullName "pkg/$NAME/"
+          Compress-Archive -Path "pkg/$NAME" -DestinationPath "$NAME.zip" -Force
+          $hash = (Get-FileHash -Algorithm SHA256 "$NAME.zip").Hash.ToLower()
+          "$hash  $NAME.zip" | Out-File -Encoding ascii "$NAME.zip.sha256"
+          Get-Item "$NAME.zip"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.platform }}
+          path: |
+            *.tar.gz
+            *.tar.gz.sha256
+            *.zip
+            *.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: always() && needs.build.result != 'cancelled'
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+          pattern: release-*
+
+      - name: List files
+        run: find artifacts -type f | sort
+
+      - name: Create / update release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          fail_on_unmatched_files: false
+          files: |
+            artifacts/*.tar.gz
+            artifacts/*.tar.gz.sha256
+            artifacts/*.zip
+            artifacts/*.zip.sha256
+          body: |
+            Multi-platform **skred-repl** binaries.
+
+            | Platform | File |
+            |----------|------|
+            | Linux x86_64 | `skred-repl-*-linux-x86_64.tar.gz` |
+            | macOS universal | `skred-repl-*-macos-universal.tar.gz` |
+            | Windows x86_64 | `skred-repl-*-windows-x86_64.zip` (MSVC) |
+
+            SHA256 checksums attached.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
