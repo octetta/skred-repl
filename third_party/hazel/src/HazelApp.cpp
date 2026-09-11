@@ -1038,7 +1038,7 @@ void HazelApp::appendOutput(int insert_pos, const char* text, int is_error) {
     std::string clean_styles;
     
     char current_style = is_error ? 'C' : 'B';
-    unsigned int current_fg = is_error ? config_.error_bg : config_.text_fg;
+    unsigned int current_fg = is_error ? config_.error_fg : config_.text_fg;
     unsigned int current_bg = is_error ? config_.error_bg : config_.output_bg;
     
     const char* src = text;
@@ -1558,7 +1558,7 @@ void HazelApp::savePreferences(const std::string& font_name, int theme, int size
         out << font_name << "\n";
         out << theme << "\n";
         out << size << "\n";
-        out << config_.text_fg << " " << config_.input_bg << " " << config_.output_bg << " " << config_.error_bg << " " << config_.markdown_bg << "\n";
+        out << config_.text_fg << " " << config_.input_bg << " " << config_.output_bg << " " << config_.error_bg << " " << config_.markdown_bg << " " << config_.error_fg << " " << config_.markdown_fg << "\n";
     }
 }
 
@@ -1573,10 +1573,14 @@ void HazelApp::loadPreferences() {
         if (in >> size) {
             config_.font_size = size;
         }
-        Fl_Color fg, bg, out_bg, err_bg, md_bg;
+        Fl_Color fg, bg, out_bg, err_bg, md_bg, err_f = FL_DARK_RED, md_f = FL_DARK_GREEN;
         bool has_colors = false;
         if (in >> fg >> bg >> out_bg >> err_bg >> md_bg) {
             has_colors = true;
+            if (!(in >> err_f >> md_f)) {
+                err_f = FL_DARK_RED;
+                md_f = FL_DARK_GREEN;
+            }
         }
         
         hazel_config_t cfg = config_;
@@ -1599,12 +1603,16 @@ void HazelApp::loadPreferences() {
             cfg.output_bg = fl_rgb_color(15, 15, 20);
             cfg.error_bg = fl_rgb_color(40, 10, 10);
             cfg.markdown_bg = fl_rgb_color(20, 30, 25);
+            cfg.error_fg = fl_rgb_color(255, 100, 100);
+            cfg.markdown_fg = fl_rgb_color(100, 255, 100);
         } else if (theme == 2 && has_colors) { // Custom Theme
             cfg.text_fg = fg;
             cfg.input_bg = bg;
             cfg.output_bg = out_bg;
             cfg.error_bg = err_bg;
             cfg.markdown_bg = md_bg;
+            cfg.error_fg = err_f;
+            cfg.markdown_fg = md_f;
         }
         
         setConfig(&cfg);
