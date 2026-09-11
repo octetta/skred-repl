@@ -66,7 +66,8 @@ public:
         
         preview_ = new Fl_Box(10, 290, 400, 40, "⢀⣴⣾⣿⣿⣷⣦⡀ ⣾⣿ Braille Test");
         preview_->box(FL_DOWN_BOX);
-        preview_->color(FL_WHITE);
+        preview_->color(current_cfg.input_bg);
+        preview_->labelcolor(current_cfg.text_fg);
         preview_->labelsize(current_cfg.font_size);
         
         custom_group_ = new Fl_Group(10, 335, 400, 50);
@@ -97,19 +98,22 @@ public:
         
         auto color_cb = [](Fl_Widget* w, void* v) {
             ColorButton* btn = (ColorButton*)w;
+            PreferencesWindow* self = (PreferencesWindow*)v;
             uchar r, g, b;
             Fl::get_color(btn->my_color, r, g, b);
             double dr = r/255.0, dg = g/255.0, db = b/255.0;
             if (fl_color_chooser("Pick Color", dr, dg, db)) {
                 btn->my_color = fl_rgb_color(dr * 255.0, dg * 255.0, db * 255.0);
                 btn->redraw();
+                if (btn == self->btn_bg_) { self->preview_->color(btn->my_color); self->preview_->redraw(); }
+                if (btn == self->btn_fg_) { self->preview_->labelcolor(btn->my_color); self->preview_->redraw(); }
             }
         };
-        btn_fg_->callback(color_cb);
-        btn_bg_->callback(color_cb);
-        btn_out_->callback(color_cb);
-        btn_err_->callback(color_cb);
-        btn_md_->callback(color_cb);
+        btn_fg_->callback(color_cb, this);
+        btn_bg_->callback(color_cb, this);
+        btn_out_->callback(color_cb, this);
+        btn_err_->callback(color_cb, this);
+        btn_md_->callback(color_cb, this);
 
         cancel_ = new Fl_Button(240, 390, 80, 30, "Cancel");
         ok_ = new Fl_Button(330, 390, 80, 30, "OK");
@@ -166,23 +170,28 @@ public:
             preview_->labelfont(f);
         }
         
-        if (current_cfg.input_bg == FL_WHITE) {
-            theme_choice_->value(0);
-            custom_group_->hide();
-        } else if (current_cfg.input_bg == fl_rgb_color(30, 30, 30) || current_cfg.input_bg == fl_rgb_color(25, 25, 30)) {
-            theme_choice_->value(1);
-            custom_group_->hide();
-        } else {
-            theme_choice_->value(2);
+        theme_choice_->value(current_cfg.theme);
+        if (current_cfg.theme == 2) {
             custom_group_->show();
+        } else {
+            custom_group_->hide();
         }
         
         theme_choice_->callback([](Fl_Widget*, void* v) {
             PreferencesWindow* self = (PreferencesWindow*)v;
-            if (self->theme_choice_->value() == 2) {
+            int t = self->theme_choice_->value();
+            if (t == 2) {
                 self->custom_group_->show();
             } else {
                 self->custom_group_->hide();
+                if (t == 0) {
+                    self->preview_->color(FL_WHITE);
+                    self->preview_->labelcolor(FL_BLACK);
+                } else if (t == 1) {
+                    self->preview_->color(fl_rgb_color(30, 30, 30));
+                    self->preview_->labelcolor(fl_rgb_color(220, 220, 220));
+                }
+                self->preview_->redraw();
             }
         }, this);
         

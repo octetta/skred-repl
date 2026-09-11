@@ -512,6 +512,7 @@ int HazelEditor::handle(int event) {
                     }
                 }
                 
+                cfg.theme = theme;
                 if (theme == 0) { // Light
                     cfg.text_fg = FL_BLACK;
                     cfg.input_bg = FL_WHITE;
@@ -1591,6 +1592,7 @@ void HazelApp::loadPreferences() {
             }
         }
         
+        cfg.theme = theme;
         if (theme == 1) { // Dark Theme
             cfg.text_fg = fl_rgb_color(220, 220, 220);
             cfg.input_bg = fl_rgb_color(25, 25, 30);

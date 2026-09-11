@@ -16,6 +16,7 @@ typedef struct hazel_app_t hazel_app_t;
 typedef struct {
     int font;
     int font_size;
+    int theme; // 0=Light, 1=Dark, 2=Custom
     unsigned int input_bg;
     unsigned int output_bg;
     unsigned int error_bg;
