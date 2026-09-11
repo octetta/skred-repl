@@ -14,15 +14,16 @@ int my_load_cb(hazel_app_t* app, const char* filepath, void* user_data) {
     
     hazel_clear(app);
     
-    char line[2048];
-    while (fgets(line, sizeof(line), f)) {
-        if (line[0] == '#') {
-            char* text = line + 1;
-            if (text[0] == ' ') text++;
-            hazel_append_block(app, 'D', text);
-        } else {
-            hazel_append_block(app, 'A', line);
-        }
+    fseek(f, 0, SEEK_END);
+    long size = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    
+    char* buf = (char*)malloc(size + 1);
+    if (buf) {
+        fread(buf, 1, size, f);
+        buf[size] = '\0';
+        hazel_append_block(app, 'A', buf); // Will be re-parsed by style_update_cb if we trigger it
+        free(buf);
     }
     fclose(f);
     
@@ -43,37 +44,12 @@ int my_save_cb(hazel_app_t* app, const char* filepath, void* user_data) {
     
     if (text && styles) {
         int len = strlen(text);
-        char current_style = 0;
-        int block_start = 0;
-        
-        auto flush_block = [&](int end_pos) {
-            if (block_start >= end_pos) return;
-            if (current_style == 'D') {
-                bool new_line = true;
-                for (int i = block_start; i < end_pos; i++) {
-                    if (new_line) { fprintf(f, "# "); new_line = false; }
-                    fprintf(f, "%c", text[i]);
-                    if (text[i] == '\n') new_line = true;
-                }
-                if (!new_line) fprintf(f, "\n");
-            } else if (current_style == 'A') {
-                for (int i = block_start; i < end_pos; i++) {
-                    fprintf(f, "%c", text[i]);
-                }
-                if (end_pos == block_start || text[end_pos-1] != '\n') fprintf(f, "\n");
-            }
-        };
-        
         for (int i = 0; i < len; i++) {
             char s = styles[i];
-            if (s == 'C') s = 'B';
-            if (s != current_style) {
-                flush_block(i);
-                current_style = s;
-                block_start = i;
+            if (s == 'A' || s == 'D') {
+                fprintf(f, "%c", text[i]);
             }
         }
-        flush_block(len);
     }
     
     fclose(f);
@@ -126,6 +102,7 @@ int main(int argc, char** argv) {
     config.output_bg = fl_rgb_color(245, 245, 250);
     config.error_bg = fl_rgb_color(255, 235, 235);
     config.markdown_bg = fl_rgb_color(245, 255, 245);
+    config.parser_mode = 1;
     config.on_open = my_load_cb;
     config.on_save = my_save_cb;
     hazel_set_config(app, &config);

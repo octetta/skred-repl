@@ -177,6 +177,74 @@ static void style_update_cb(int pos, int nInserted, int nDeleted, int nRestyled,
         }
     }
     
+    if (app->getConfig().parser_mode == 1) {
+        if (nInserted > 0) {
+            std::string styles(nInserted, 'A');
+            style_buf->replace(pos, pos + nDeleted, styles.c_str());
+        } else if (nDeleted > 0) {
+            style_buf->remove(pos, pos + nDeleted);
+        }
+        
+        Fl_Text_Buffer* buffer = app->getBuffer();
+        int length = buffer->length();
+        char* new_styles = (char*)malloc(length + 1);
+        if (!new_styles) return;
+        
+        bool in_comment = false;
+        int i = 0;
+        while (i < length) {
+            int line_start = buffer->line_start(i);
+            int line_end = buffer->line_end(i);
+            
+            bool starts_with_hash_hash = false;
+            bool starts_with_hash = false;
+            
+            int len = line_end - line_start;
+            if (len >= 2 && buffer->char_at(line_start) == '#' && buffer->char_at(line_start + 1) == '#') {
+                starts_with_hash_hash = true;
+            } else if (len >= 1 && buffer->char_at(line_start) == '#') {
+                starts_with_hash = true;
+            }
+            
+            if (starts_with_hash_hash) {
+                in_comment = true;
+            } else if (!starts_with_hash) {
+                in_comment = false;
+            }
+            
+            for (int j = line_start; j <= line_end && j < length; j++) {
+                char current_s = style_buf->char_at(j);
+                if (current_s == 'B' || current_s == 'C') {
+                    new_styles[j] = current_s;
+                    while (j < length && (style_buf->char_at(j) == 'B' || style_buf->char_at(j) == 'C')) {
+                        new_styles[j] = style_buf->char_at(j);
+                        j++;
+                    }
+                    j--; 
+                    in_comment = false;
+                } else {
+                    new_styles[j] = in_comment ? 'D' : 'A';
+                }
+            }
+            i = line_end + 1;
+        }
+        new_styles[length] = '\0';
+        
+        bool changed = false;
+        for (int j = 0; j < length; j++) {
+            if (style_buf->char_at(j) != new_styles[j]) {
+                changed = true;
+                break;
+            }
+        }
+        
+        if (changed) {
+            style_buf->replace(0, length, new_styles);
+        }
+        free(new_styles);
+        return;
+    }
+    
     if (nInserted > 0) {
         char target_style = 'A';
         char prev = (pos > 0) ? app->getStyleAt(pos - 1) : '\0';
@@ -1296,6 +1364,10 @@ void HazelApp::appendBlock(char style, const char* text) {
     std::string styles(strlen(text), style);
     style_buffer_->insert(pos, styles.c_str());
     buffer_->add_modify_callback(style_update_cb, this);
+    
+    if (config_.parser_mode == 1) {
+        style_update_cb(0, 0, 0, 0, "", this);
+    }
 }
 
 const char* HazelApp::getText() const {
