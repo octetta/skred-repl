@@ -1121,12 +1121,10 @@ char HazelApp::getStyleAt(int pos) {
 }
 
 void HazelApp::startRunAll() {
-    int start_pos = 0;
-    if (highest_modified_pos_ != -1) {
-        start_pos = highest_modified_pos_;
+    if (highest_modified_pos_ == -1) {
+        return; // Nothing changed, do not rerun
     }
-    
-    highest_modified_pos_ = 0;
+    int start_pos = highest_modified_pos_;
     
     
     int block_start = start_pos;
@@ -1163,8 +1161,6 @@ void HazelApp::finishEvaluation(hazel_ctx_t* ctx) {
         editor_->insert_position(buffer_->length());
         editor_->show_insert_position();
     } else {
-        highest_modified_pos_ = 0;
-    
         int search = ctx->insert_pos;
         while (search < buffer_->length()) {
             char s = getStyleAt(search);
@@ -1330,7 +1326,24 @@ void HazelEditor::draw() {
                     }
                     fl_line(m_x, cy, this->x() + line_w, cy);
                 }
-                fl_color(fl_rgb_color(150, 150, 150));
+                
+                int h_pos = app_->getHighestModifiedPos();
+                bool is_stale = false;
+                if (h_pos != -1) {
+                    int block_end = line_start;
+                    while (block_end < buffer()->length() && getEffectiveStyleAt(block_end) == curr) block_end++;
+                    if (h_pos <= block_end) {
+                        is_stale = true;
+                    }
+                }
+                
+                if (is_stale) {
+                    fl_font(FL_HELVETICA_BOLD, 10);
+                    fl_color(fl_rgb_color(100, 100, 100)); // Slightly darker if stale
+                } else {
+                    fl_font(FL_HELVETICA, 10);
+                    fl_color(fl_rgb_color(150, 150, 150));
+                }
                 fl_draw(badge, m_x + 4, cy + height - 4);
             }
             
