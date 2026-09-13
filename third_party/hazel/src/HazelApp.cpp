@@ -246,6 +246,7 @@ public:
                 "</table>";
         }
         
+        if (ext_html) { help_text += ext_html; }
         disp->value(help_text.c_str());
         
         Fl_Button* close_btn = new Fl_Button(185, 650, 80, 30, "Close");
