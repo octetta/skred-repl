@@ -172,11 +172,35 @@ public:
 
 class HelpWindow : public Fl_Double_Window {
 public:
-    HelpWindow(const std::string& app_title, const std::string& app_version, bool is_skred_mode, const char* ext_html) : Fl_Double_Window(450, 700, "Help & About") {
+    
+    static const char* my_link_cb(Fl_Widget* w, const char* uri) {
+        HelpWindow* hw = (HelpWindow*)w->window();
+        if (strncmp(uri, "help://", 7) == 0 && hw->help_cb_) {
+            const char* html = hw->help_cb_(uri + 7);
+            hw->update_ext_html(html);
+            return NULL; // Handled
+        }
+        return uri;
+    }
+
+    const char* (*help_cb_)(const char*);
+    std::string base_help_text_;
+    Fl_Help_View* disp_;
+
+    void update_ext_html(const char* ext_html) {
+        std::string text = base_help_text_;
+        if (ext_html) {
+            text += ext_html;
+        }
+        disp_->value(text.c_str());
+    }
+
+    HelpWindow(const std::string& app_title, const std::string& app_version, bool is_skred_mode, const char* ext_html, const char* (*help_cb)(const char*)) : Fl_Double_Window(600, 700, "Help & About") {
+        help_cb_ = help_cb;
         this->color(fl_rgb_color(245, 245, 250));
         
         std::string disp_title = app_title.empty() ? "Hazel Editor" : app_title;
-        Fl_Box* title = new Fl_Box(20, 10, 410, 30);
+        Fl_Box* title = new Fl_Box(20, 10, 560, 30);
         title->copy_label(disp_title.c_str());
         title->labelsize(20);
         title->labelfont(FL_HELVETICA_BOLD);
@@ -191,20 +215,20 @@ public:
         }
 
         // Use Fl_Help_View for the version too to support HTML and prevent clipping
-        Fl_Help_View* ver = new Fl_Help_View(20, 45, 410, 60);
+        Fl_Help_View* ver = new Fl_Help_View(20, 45, 560, 60);
         ver->box(FL_FLAT_BOX);
         ver->color(this->color());
         ver->textfont(FL_HELVETICA);
         ver->textsize(12);
         ver->value(("<div align='center'>" + disp_ver + "</div>").c_str());
         
-        Fl_Help_View* disp = new Fl_Help_View(20, 110, 410, 520);
-        disp->box(FL_FLAT_BOX);
-        disp->color(this->color());
-        disp->textfont(FL_HELVETICA);
-        disp->textsize(13);
+        disp_ = new Fl_Help_View(20, 110, 560, 520);
+        disp_->box(FL_FLAT_BOX);
+        disp_->color(this->color());
+        disp_->textfont(FL_HELVETICA);
+        disp_->textsize(13);
         
-        std::string help_text = 
+        base_help_text_ = 
             "<h3 align='center'>Keyboard Shortcuts</h3>"
             "<table width='100%' border='0' cellpadding='4'>"
             "<tr><td align='right' width='45%'><b>Cmd/Ctrl + S</b></td><td>Save File</td></tr>"
@@ -228,7 +252,7 @@ public:
             "</table>";
             
         if (is_skred_mode) {
-            help_text += 
+            base_help_text_ += 
                 "<h3 align='center'>Skred-REPL Mode</h3>"
                 "<table width='100%' border='0' cellpadding='4'>"
                 "<tr><td align='right' width='45%'><b>##</b></td><td>starts a Comment Block</td></tr>"
@@ -237,7 +261,7 @@ public:
                 "<tr><td align='right'><b>Alt + A-Z</b></td><td>Run Macro _MCA to _MCZ</td></tr>"
                 "</table>";
         } else {
-            help_text += 
+            base_help_text_ += 
                 "<h3 align='center'>Notebook Mode</h3>"
                 "<table width='100%' border='0' cellpadding='4'>"
                 "<tr><td align='right' width='45%'><b>Cmd/Ctrl + U</b></td><td>Convert to Markdown</td></tr>"
@@ -246,10 +270,12 @@ public:
                 "</table>";
         }
         
-        if (ext_html) { help_text += ext_html; }
-        disp->value(help_text.c_str());
+        disp_->link(my_link_cb);
+        if (help_cb_ && !ext_html) ext_html = help_cb_("");
+        update_ext_html(ext_html);
+
         
-        Fl_Button* close_btn = new Fl_Button(185, 650, 80, 30, "Close");
+        Fl_Button* close_btn = new Fl_Button(260, 650, 80, 30, "Close");
         close_btn->callback([](Fl_Widget*, void* v) {
             ((Fl_Window*)v)->hide();
         }, this);
@@ -1739,7 +1765,7 @@ void HazelApp::loadPreferences() {
 }
 
 void HazelApp::showHelpWindow() {
-    HelpWindow* hw = new HelpWindow(app_title_, app_version_, config_.parser_mode == 1, config_.help_extension_html);
+    HelpWindow* hw = new HelpWindow(app_title_, app_version_, config_.parser_mode == 1, config_.help_extension_html, config_.help_extension_cb);
     hw->callback([](Fl_Widget* w, void*) {
         w->hide();
         Fl::delete_widget(w);
