@@ -170,6 +170,16 @@ public:
 
 #include <FL/Fl_Help_View.H>
 
+// --- HelpWindow & HTML Documentation ---
+// HOW TO TWEAK THE HELP SYSTEM:
+// The HelpWindow uses FLTK's Fl_Help_View widget, which acts like a tiny browser.
+// It supports basic HTML tags (<b>, <i>, <h1>-<h6>, <p>, <table>, <tr>, <td>, <a>).
+// It DOES NOT support modern CSS, <div> styling, <style>, or JavaScript.
+// 
+// When the user clicks an <a href="help://..."> link, FLTK triggers `my_link_cb`.
+// We intercept this click, extract the URI, and ask the host app (via `help_cb_`) 
+// to provide a new HTML string. We then replace the widget's contents.
+// This allows host apps (like skred-repl) to provide interactive, multi-page help documentation.
 class HelpWindow : public Fl_Double_Window {
 public:
     
