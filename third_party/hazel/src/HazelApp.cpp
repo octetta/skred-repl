@@ -170,7 +170,7 @@ public:
 
 class HelpWindow : public Fl_Double_Window {
 public:
-    HelpWindow(const std::string& app_title, const std::string& app_version, bool is_skred_mode) : Fl_Double_Window(450, 600, "Help & About") {
+    HelpWindow(const std::string& app_title, const std::string& app_version, bool is_skred_mode) : Fl_Double_Window(450, 700, "Help & About") {
         this->color(fl_rgb_color(245, 245, 250));
         
         std::string disp_title = app_title.empty() ? "Hazel Editor" : app_title;
@@ -188,7 +188,7 @@ public:
         ver->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
         
         Fl_Text_Buffer* buf = new Fl_Text_Buffer();
-        Fl_Text_Display* disp = new Fl_Text_Display(20, 80, 410, 450);
+        Fl_Text_Display* disp = new Fl_Text_Display(20, 80, 410, 550);
         disp->buffer(buf);
         disp->box(FL_FLAT_BOX);
         disp->color(this->color());
@@ -229,12 +229,12 @@ public:
         
         buf->text(help_text.c_str());
         
-        Fl_Button* close_btn = new Fl_Button(185, 550, 80, 30, "Close");
+        Fl_Button* close_btn = new Fl_Button(185, 650, 80, 30, "Close");
         close_btn->callback([](Fl_Widget*, void* v) {
             ((Fl_Window*)v)->hide();
         }, this);
         
-        this->set_modal();
+        
         this->end();
     }
 };
