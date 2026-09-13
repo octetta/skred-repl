@@ -168,72 +168,90 @@ public:
 
 
 
+#include <FL/Fl_Help_View.H>
+
 class HelpWindow : public Fl_Double_Window {
 public:
     HelpWindow(const std::string& app_title, const std::string& app_version, bool is_skred_mode) : Fl_Double_Window(450, 700, "Help & About") {
         this->color(fl_rgb_color(245, 245, 250));
         
         std::string disp_title = app_title.empty() ? "Hazel Editor" : app_title;
-        Fl_Box* title = new Fl_Box(20, 15, 410, 30);
+        Fl_Box* title = new Fl_Box(20, 10, 410, 30);
         title->copy_label(disp_title.c_str());
         title->labelsize(20);
         title->labelfont(FL_HELVETICA_BOLD);
         title->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
         
-        std::string disp_ver = app_version.empty() ? std::string("Version " HAZEL_VERSION) : (app_version + "\n(Powered by Hazel " HAZEL_VERSION ")");
-        Fl_Box* ver = new Fl_Box(20, 45, 410, 30);
-        ver->copy_label(disp_ver.c_str());
-        ver->labelsize(12);
-        ver->labelfont(FL_HELVETICA);
-        ver->align(FL_ALIGN_CENTER | FL_ALIGN_INSIDE);
+        std::string disp_ver = app_version.empty() ? std::string("Version " HAZEL_VERSION) : (app_version + "<br>(Powered by Hazel " HAZEL_VERSION ")");
+        // Convert newlines in app_version to <br> for HTML display
+        size_t pos = 0;
+        while ((pos = disp_ver.find("\n", pos)) != std::string::npos) {
+            disp_ver.replace(pos, 1, "<br>");
+            pos += 4;
+        }
+
+        // Use Fl_Help_View for the version too to support HTML and prevent clipping
+        Fl_Help_View* ver = new Fl_Help_View(20, 45, 410, 60);
+        ver->box(FL_FLAT_BOX);
+        ver->color(this->color());
+        ver->textfont(FL_HELVETICA);
+        ver->textsize(12);
+        ver->value(("<div align='center'>" + disp_ver + "</div>").c_str());
         
-        Fl_Text_Buffer* buf = new Fl_Text_Buffer();
-        Fl_Text_Display* disp = new Fl_Text_Display(20, 80, 410, 550);
-        disp->buffer(buf);
+        Fl_Help_View* disp = new Fl_Help_View(20, 110, 410, 520);
         disp->box(FL_FLAT_BOX);
         disp->color(this->color());
         disp->textfont(FL_HELVETICA);
         disp->textsize(13);
         
         std::string help_text = 
-            "Keyboard Shortcuts:\n\n"
-            "  Cmd/Ctrl + S : Save File\n"
-            "  Cmd/Ctrl + Shift + S : Save As...\n"
-            "  Cmd/Ctrl + O : Open File\n"
-            "  Cmd/Ctrl + Shift + O : Open Folder (CWD)\n"
-            "  Cmd/Ctrl + , : Preferences\n"
-            "  Cmd/Ctrl + / : Help / About\n\n"
-            "  Cmd/Ctrl + = / - / 0 : Zoom In / Out / Reset\n\n"
-            "  Cmd/Ctrl + Enter : Evaluate Current Block\n"
-            "  Cmd/Ctrl + R : Run All Blocks\n"
-            "  Cmd/Ctrl + D : Delete Current Block\n"
-            "  Cmd/Ctrl + Up / Down : Move Cell\n"
-            "  Alt + A..Z : Trigger Macros A-Z\n\n"
-            "  Ctrl + ` : Toggle Terminal Panel\n"
-            "  Ctrl + Tab / Ctrl + Down : Focus Terminal\n"
-            "  Ctrl + Tab / Ctrl + Up : Focus Editor\n\n";
+            "<h3 align='center'>Keyboard Shortcuts</h3>"
+            "<table width='100%' border='0' cellpadding='4'>"
+            "<tr><td align='right' width='45%'><b>Cmd/Ctrl + S</b></td><td>Save File</td></tr>"
+            "<tr><td align='right'><b>Cmd/Ctrl + Shift + S</b></td><td>Save As...</td></tr>"
+            "<tr><td align='right'><b>Cmd/Ctrl + O</b></td><td>Open File</td></tr>"
+            "<tr><td align='right'><b>Cmd/Ctrl + Shift + O</b></td><td>Open Folder (CWD)</td></tr>"
+            "<tr><td align='right'><b>Cmd/Ctrl + ,</b></td><td>Preferences</td></tr>"
+            "<tr><td align='right'><b>Cmd/Ctrl + /</b></td><td>Help / About</td></tr>"
+            "<tr><td colspan='2'> </td></tr>"
+            "<tr><td align='right'><b>Cmd/Ctrl + = / - / 0</b></td><td>Zoom In / Out / Reset</td></tr>"
+            "<tr><td colspan='2'> </td></tr>"
+            "<tr><td align='right'><b>Cmd/Ctrl + Enter</b></td><td>Evaluate Current Block</td></tr>"
+            "<tr><td align='right'><b>Cmd/Ctrl + R</b></td><td>Run All Blocks</td></tr>"
+            "<tr><td align='right'><b>Cmd/Ctrl + D</b></td><td>Delete Current Block</td></tr>"
+            "<tr><td align='right'><b>Cmd/Ctrl + Up / Down</b></td><td>Move Cell</td></tr>"
+            "<tr><td align='right'><b>Alt + A..Z</b></td><td>Trigger Macros A-Z</td></tr>"
+            "<tr><td colspan='2'> </td></tr>"
+            "<tr><td align='right'><b>Ctrl + `</b></td><td>Toggle Terminal Panel</td></tr>"
+            "<tr><td align='right'><b>Ctrl + Tab / Down</b></td><td>Focus Terminal</td></tr>"
+            "<tr><td align='right'><b>Ctrl + Tab / Up</b></td><td>Focus Editor</td></tr>"
+            "</table>";
             
         if (is_skred_mode) {
             help_text += 
-                "Skred-REPL Mode:\n"
-                "  ## starts a Comment Block\n"
-                "  # continues a Comment Block\n"
-                "  Any normal line starts a Code Block\n"
-                "  Alt + A-Z : Run Macro _MCA to _MCZ\n";
+                "<h3 align='center'>Skred-REPL Mode</h3>"
+                "<table width='100%' border='0' cellpadding='4'>"
+                "<tr><td align='right' width='45%'><b>##</b></td><td>starts a Comment Block</td></tr>"
+                "<tr><td align='right'><b>#</b></td><td>continues a Comment Block</td></tr>"
+                "<tr><td align='right'><b><i>(normal line)</i></b></td><td>starts a Code Block</td></tr>"
+                "<tr><td align='right'><b>Alt + A-Z</b></td><td>Run Macro _MCA to _MCZ</td></tr>"
+                "</table>";
         } else {
             help_text += 
-                "  Cmd/Ctrl + U : Convert to Markdown\n"
-                "  Cmd/Ctrl + Y : Convert to Code\n"
-                "  Alt + Enter : Split Cell\n";
+                "<h3 align='center'>Notebook Mode</h3>"
+                "<table width='100%' border='0' cellpadding='4'>"
+                "<tr><td align='right' width='45%'><b>Cmd/Ctrl + U</b></td><td>Convert to Markdown</td></tr>"
+                "<tr><td align='right'><b>Cmd/Ctrl + Y</b></td><td>Convert to Code</td></tr>"
+                "<tr><td align='right'><b>Alt + Enter</b></td><td>Split Cell</td></tr>"
+                "</table>";
         }
         
-        buf->text(help_text.c_str());
+        disp->value(help_text.c_str());
         
         Fl_Button* close_btn = new Fl_Button(185, 650, 80, 30, "Close");
         close_btn->callback([](Fl_Widget*, void* v) {
             ((Fl_Window*)v)->hide();
         }, this);
-        
         
         this->end();
     }

@@ -174,6 +174,7 @@ int main(int argc, char** argv) {
     config.on_open = my_load_cb;
     config.on_save = my_save_cb;
     config.on_open_dir = my_dir_cb;
+    config.startup_text = "##\nv0 a0 w0 f440 t 0.01 0 1 .25\n";
     hazel_set_config(app, &config);
     hazel_load_preferences(app);
 
