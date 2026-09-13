@@ -1,0 +1,53 @@
+## kick and snare in k-synth
+
+## kick
+[
+/ 808 Kick — 141->50Hz sweep, 300ms
+/ N=13230
+N: 13230
+T: !N
+E: e(T*(0-6.9%N))
+/ pitch sweep 141->50Hz
+F: 50+91*e(T*(0-60%N))
+D: F*((p 2)%(p 0))
+P: +\D
+S: s P
+/ short attack noise thump
+Q: e(T*(0-300%N))
+R: r T
+C: 0.04 f R
+W: w (E*S)+(Q*C*.1)
+] k! k>d d>r /r 100
+
+## snare
+
+[
+/ 808 Snare — 170Hz body dominant, noise tail, 280ms
+/ N=12348
+N: 12348
+T: !N
+/ body: 170Hz + 183Hz detuned pair, decay ~20ms
+B: e(T*(0-25%N))
+F: 170*((p 2)%(p 0))
+G: 183*((p 2)%(p 0))
+P: +\(N#F)
+Q: +\(N#G)
+S: B*(s P+s Q)*.5
+/ noise tail: full duration — lower in mix than body at start
+E: e(T*(0-6.9%N))
+R: r T
+U: E*R
+/ snap
+V: e(T*(0-80%N))
+K: r T
+/ body is primary (*.7), noise secondary (*.4)
+W: w (S*.7)+(U*.4)+(V*K*.2)
+] k! k>d d>r /r 101
+##
+v0 w100 a10
+v1 w101 a10
+##
+M 60
+x 0 [ v0 l1 ]
+x 1 [ v1 l1 ]
+##
