@@ -32,6 +32,7 @@ typedef struct {
     int (*on_save)(hazel_app_t* app, const char* filepath, void* user_data);
     int (*on_open_dir)(hazel_app_t* app, const char* dirpath, void* user_data);
     const char* startup_text;
+    const char* help_extension_html;
 } hazel_config_t;
 
 void hazel_set_config(hazel_app_t* app, const hazel_config_t* config);
