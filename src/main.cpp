@@ -177,9 +177,13 @@ int main(int argc, char** argv) {
     hazel_set_config(app, &config);
     hazel_load_preferences(app);
 
+    char ver_str[256];
 #ifdef SKRED_REPL_VERSION
-    hazel_set_app_version(app, SKRED_REPL_VERSION);
+    snprintf(ver_str, sizeof(ver_str), "%s\nSkred Engine: %s", SKRED_REPL_VERSION, skred_version());
+#else
+    snprintf(ver_str, sizeof(ver_str), "Skred Engine: %s", skred_version());
 #endif
+    hazel_set_app_version(app, ver_str);
     
     if (argc > 1) {
         hazel_load_file(app, argv[1]);

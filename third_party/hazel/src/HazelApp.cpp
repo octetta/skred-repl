@@ -734,14 +734,7 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     win_->callback([](Fl_Widget*, void* v){ ((HazelApp*)v)->tryQuit(); }, this);
     win_->end();
     
-    // Setup initial notebook state
-    const char* startup = "// Welcome to Hazel Notebook.\n// Press Enter to edit code. Press Ctrl+Enter to evaluate.\n// Press Esc to return to Command mode.\n";
-    buffer_->text(startup);
-    std::string start_styles(strlen(startup), 'D');
-    style_buffer_->text(start_styles.c_str());
-    
-    buffer_->append("\n"); // Fresh input cell
-    style_buffer_->append("A");
+
     
     buffer_->add_modify_callback(style_update_cb, this);
     
@@ -1475,6 +1468,15 @@ void HazelApp::setConfig(const hazel_config_t* config) {
     if (!config) return;
     config_ = *config;
     applyConfig();
+    
+    // Only apply startup text if buffer is completely empty
+    if (config_.startup_text && buffer_->length() == 0) {
+        buffer_->text(config_.startup_text);
+        std::string start_styles(strlen(config_.startup_text), 'D');
+        style_buffer_->text(start_styles.c_str());
+        buffer_->append("\n");
+        style_buffer_->append("A");
+    }
     
     if (win_) win_->color(config_.input_bg);
     if (status_bar_) {
