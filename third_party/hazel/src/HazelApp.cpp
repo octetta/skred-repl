@@ -2,7 +2,7 @@
 #include "TerminalPane.h"
 #include "Preferences.h"
 #include <FL/Fl.H>
-#include <FL/Fl_Native_File_Chooser.H>
+#include <FL/Fl_File_Chooser.H>
 #include <iostream>
 #include <FL/Fl_Box.H>
 
@@ -849,22 +849,17 @@ void HazelApp::loadFile(const char* filepath) {
 }
 
 void HazelApp::openFile() {
-    Fl_Native_File_Chooser fnfc;
-    fnfc.title("Open Notebook");
-    fnfc.type(Fl_Native_File_Chooser::BROWSE_FILE);
-    fnfc.filter("Notebook Files\t*.{md,sk}\nMarkdown\t*.md\nSkred Script\t*.sk\nAll Files\t*");
-    if (fnfc.show() == 0) {
-        loadFile(fnfc.filename());
+    const char* filename = fl_file_chooser("Open Notebook", "Notebook Files (*.{md,sk})\tMarkdown (*.md)\tSkred Script (*.sk)", NULL);
+    if (filename) {
+        loadFile(filename);
     }
 }
 
 void HazelApp::openDirectory() {
-    Fl_Native_File_Chooser fnfc;
-    fnfc.title("Open Folder / Set Working Directory");
-    fnfc.type(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
-    if (fnfc.show() == 0) {
+    const char* dir = fl_dir_chooser("Open Folder / Set Working Directory", NULL);
+    if (dir) {
         if (config_.on_open_dir) {
-            config_.on_open_dir((hazel_app_t*)this, fnfc.filename(), user_data_);
+            config_.on_open_dir((hazel_app_t*)this, dir, user_data_);
         }
     }
 }
@@ -923,12 +918,9 @@ void HazelApp::saveFileAs(const char* filepath) {
 }
 
 void HazelApp::promptSaveAs() {
-    Fl_Native_File_Chooser fnfc;
-    fnfc.title("Save Notebook As...");
-    fnfc.type(Fl_Native_File_Chooser::BROWSE_SAVE_FILE);
-    fnfc.filter("Notebook Files\t*.{md,sk}\nMarkdown\t*.md\nSkred Script\t*.sk\nAll Files\t*");
-    if (fnfc.show() == 0) {
-        saveFileAs(fnfc.filename());
+    const char* filename = fl_file_chooser("Save Notebook As...", "Notebook Files (*.{md,sk})\tMarkdown (*.md)\tSkred Script (*.sk)", NULL);
+    if (filename) {
+        saveFileAs(filename);
     }
 }
 
