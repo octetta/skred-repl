@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include "hazel/hazel.h"
-#include "skred/api.h"
+#include "api.h"
 #include <FL/Fl.H>
 
 #include <unistd.h> // For chdir()
@@ -146,9 +146,30 @@ void my_eval_engine(const char* input, hazel_ctx_t* ctx, void* user_data) {
 }
 
 int main(int argc, char** argv) {
-    if (skred_start(128, 64, 60440) != 0) {
+    int udp_port = 60440;
+    int events_port = 0;
+    int frames = 128;
+    int voices = 64;
+    const char* file_to_load = nullptr;
+
+    for (int i=1; i<argc; i++) {
+        if (argv[i][0] == '-') {
+            if (argv[i][1] == 'e') events_port = atoi(&argv[i][2]);
+            else if (argv[i][1] == 'p') udp_port = atoi(&argv[i][2]);
+            else if (argv[i][1] == 'v') voices = atoi(&argv[i][2]);
+            else if (argv[i][1] == 'r') frames = atoi(&argv[i][2]);
+        } else {
+            file_to_load = argv[i];
+        }
+    }
+
+    if (skred_start(frames, voices, udp_port) != 0) {
         std::cerr << "Failed to start skred engine!" << std::endl;
         return 1;
+    }
+    
+    if (events_port > 0) {
+        skred_udp_events_start(events_port);
     }
     
     skred_logger(1);
@@ -187,14 +208,14 @@ int main(int argc, char** argv) {
 #endif
     hazel_set_app_version(app, ver_str);
     
-    if (argc > 1) {
-        hazel_load_file(app, argv[1]);
-        
+    if (file_to_load) {
+        hazel_load_file(app, file_to_load);
     }
     
     hazel_run(app);
     
     skred_control_dispatch_stop();
+    skred_udp_events_stop();
     skred_stop();
     
     return 0;

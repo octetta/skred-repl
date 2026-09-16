@@ -13,7 +13,7 @@ add_subdirectory(third_party/hazel)
 
 # Fetch skred API
 include(FetchContent)
-set(SKRED_VERSION "0.66.1" CACHE STRING "Version of skred API to download")
+set(SKRED_VERSION "0.66.2" CACHE STRING "Version of skred API to download")
 
 if(WIN32)
     set(SKRED_ASSET "skred-${SKRED_VERSION}-maxed-windows-x86_64.zip")
@@ -31,7 +31,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(skred_api)
 
 add_executable(skred-repl MACOSX_BUNDLE WIN32 src/main.cpp)
-target_include_directories(skred-repl PRIVATE ${skred_api_SOURCE_DIR}/include)
+target_include_directories(skred-repl PRIVATE /home/stewartj/book/pulp/parts /home/stewartj/book/pulp/parts/build_maxed /home/stewartj/book/pulp/parts/exp-vfs)
 
 execute_process(COMMAND git describe --tags --always
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
@@ -42,9 +42,9 @@ if(APP_VERSION)
 endif()
 
 if(WIN32)
-    target_link_libraries(skred-repl PRIVATE hazel ${skred_api_SOURCE_DIR}/lib/libapi.a ws2_32 winmm ole32)
+    target_link_libraries(skred-repl PRIVATE hazel /home/stewartj/book/pulp/parts/build_maxed/libapi.a ws2_32 winmm ole32)
 elseif(APPLE)
-    target_link_libraries(skred-repl PRIVATE hazel ${skred_api_SOURCE_DIR}/lib/libapi.a "-framework CoreFoundation" "-framework CoreMIDI" "-framework CoreAudio")
+    target_link_libraries(skred-repl PRIVATE hazel /home/stewartj/book/pulp/parts/build_maxed/libapi.a "-framework CoreFoundation" "-framework CoreMIDI" "-framework CoreAudio")
 else()
-    target_link_libraries(skred-repl PRIVATE hazel ${skred_api_SOURCE_DIR}/lib/libapi.a asound)
+    target_link_libraries(skred-repl PRIVATE hazel /home/stewartj/book/pulp/parts/build_maxed/libapi.a asound)
 endif()
