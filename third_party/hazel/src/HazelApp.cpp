@@ -1419,7 +1419,7 @@ void HazelEditor::draw() {
     fl_line(m_x + m_width - 1, y_start, m_x + m_width - 1, y_end);
 }
 
-void HazelApp::updateStatusBar() {
+void HazelApp::updateStatusBar(bool force) {
     static int last_pos = -1;
     static int last_length = -1;
     static int last_dirty = -1;
@@ -1427,7 +1427,7 @@ void HazelApp::updateStatusBar() {
     int length = buffer_->length();
     int dirty = is_dirty_ ? 1 : 0;
     
-    if (pos == last_pos && length == last_length && dirty == last_dirty) {
+    if (!force && pos == last_pos && length == last_length && dirty == last_dirty) {
         return; // Skip recalculation if nothing changed
     }
     last_pos = pos;

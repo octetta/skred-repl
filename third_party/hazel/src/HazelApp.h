@@ -64,7 +64,11 @@ public:
     bool run_all_pending_ = false;
     std::string status_info_;
     std::string extra_status_;
-    void setExtraStatus(const char* s) { extra_status_ = s ? s : ""; updateStatusBar(); }
+    void setExtraStatus(const char* s) { 
+        extra_status_ = s ? s : ""; 
+        status_info_ = ""; // force redraw
+        updateStatusBar(true); 
+    }
     int highest_modified_pos_ = 0;
     char pending_style_ = 0;
     std::string cell_clip_text_;
@@ -86,7 +90,7 @@ public:
     void setFilepath(const char* path);
     void setAppVersion(const char* version) { app_version_ = version ? version : ""; }
 
-    void updateStatusBar();
+    void updateStatusBar(bool force = false);
     bool checkSaveBeforeQuit();
     void setDirty(bool dirty);
     bool isDirty() const { return is_dirty_; }
