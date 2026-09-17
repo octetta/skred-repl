@@ -106,6 +106,12 @@ public:
         fl_font(FL_HELVETICA_BOLD, 12);
         fl_color(FL_DARK3);
         fl_draw(app_->status_info_.c_str(), cur_x, cur_y + 36);
+
+        if (!app_->extra_status_.empty()) {
+            int ext_w = 0, ext_h = 0;
+            fl_measure(app_->extra_status_.c_str(), ext_w, ext_h);
+            fl_draw(app_->extra_status_.c_str(), x() + w() - ext_w - 20, cur_y + 36);
+        }
         
         // Draw keys starting from the far left edge!
         int left_x = x() + 10;
@@ -1473,11 +1479,7 @@ void HazelApp::updateStatusBar(bool force) {
     if (slash) fname = slash + 1;
     
     char status[512];
-    if (extra_status_.empty()) {
-        snprintf(status, sizeof(status), "Ln %d, Col %d  |  %s", line, col, mode_with_idx);
-    } else {
-        snprintf(status, sizeof(status), "Ln %d, Col %d  |  %s  |  %s", line, col, mode_with_idx, extra_status_.c_str());
-    }
+    snprintf(status, sizeof(status), "Ln %d, Col %d  |  %s", line, col, mode_with_idx);
     
     if (status_info_ != status) {
         status_info_ = status;
