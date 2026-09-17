@@ -145,6 +145,17 @@ int TerminalPane::handle(int event) {
             }
         }
         
+        // Ctrl-U clear to prompt
+        if (key == 'u' && (state & FL_CTRL)) {
+            int pos = insert_position();
+            if (pos > prompt_pos_) {
+                buf_->remove(prompt_pos_, pos);
+                insert_position(prompt_pos_);
+                show_insert_position();
+            }
+            return 1;
+        }
+
         // Zoom In/Out
         if ((key == '=' || key == '-' || key == '0') && (state & FL_COMMAND)) {
             int new_size = app_->getConfig().font_size;

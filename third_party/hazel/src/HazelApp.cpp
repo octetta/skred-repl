@@ -5,6 +5,7 @@
 #include <FL/Fl_File_Chooser.H>
 #include <iostream>
 #include <FL/Fl_Box.H>
+#include <FL/Fl_Menu_Item.H>
 
 #include <FL/fl_draw.H>
 
@@ -407,6 +408,44 @@ HazelEditor::HazelEditor(int x, int y, int w, int h, HazelApp* app)
 }
 
 int HazelEditor::handle(int event) {
+    if (event == FL_PUSH && Fl::event_button() == FL_RIGHT_MOUSE) {
+        this->take_focus();
+        Fl_Menu_Item rclick_menu[] = {
+            { "Copy Cell", 0, 0, 0, 0 },
+            { "Cut",   0, 0, 0, 0 },
+            { "Copy",  0, 0, 0, 0 },
+            { "Paste", 0, 0, 0, 0 },
+            { "Delete",0, 0, 0, 0 },
+            { 0 }
+        };
+        const Fl_Menu_Item *m = rclick_menu->popup(Fl::event_x(), Fl::event_y(), 0, 0, 0);
+        if (m) {
+            if (strcmp(m->label(), "Copy Cell") == 0) {
+                int pos = insert_position();
+                char style = app_->getStyleAt(pos);
+                if (style != 0) {
+                    int start = pos;
+                    while (start > 0 && app_->getStyleAt(start - 1) == style) start--;
+                    int end = pos;
+                    while (end < buffer()->length() - 1 && app_->getStyleAt(end + 1) == style) end++;
+                    if (end < buffer()->length()) end++;
+                    char* text = buffer()->text_range(start, end);
+                    Fl::copy(text, strlen(text), 1); // 1 = clipboard
+                    free(text);
+                }
+            } else if (strcmp(m->label(), "Cut") == 0) {
+                Fl_Text_Editor::kf_cut(0, this);
+            } else if (strcmp(m->label(), "Copy") == 0) {
+                Fl_Text_Editor::kf_copy(0, this);
+            } else if (strcmp(m->label(), "Paste") == 0) {
+                Fl_Text_Editor::kf_paste(0, this);
+            } else if (strcmp(m->label(), "Delete") == 0) {
+                buffer()->remove_selection();
+            }
+        }
+        return 1;
+    }
+
     if (event == FL_KEYBOARD) {
         if (Fl::event_key() == FL_Up || Fl::event_key() == FL_Down || Fl::event_key() == FL_Left || Fl::event_key() == FL_Right) {
             app_->setPendingStyle(0);
