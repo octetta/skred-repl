@@ -206,7 +206,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     
-    int events_res = 1; // 1 means not started/error
+    int events_res = 0; // 0 means not started/error
     if (config.events_port > 0) {
         events_res = skred_udp_events_start(config.events_port);
     }
@@ -216,7 +216,7 @@ int main(int argc, char** argv) {
     char status_str[256];
     snprintf(status_str, sizeof(status_str), "UDP: %d (%s)  Evts: %d (%s)",
              config.udp_port, (start_res == 0) ? "OK" : "Err",
-             config.events_port, (events_res == 0) ? "OK" : (config.events_port > 0 ? "Err" : "Off"));
+             config.events_port, (events_res > 0) ? "OK" : (config.events_port > 0 ? "Err" : "Off"));
     hazel_set_status(app, status_str);
 
     char ver_str[256];
