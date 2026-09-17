@@ -28,6 +28,8 @@ typedef struct {
     unsigned int cursor_bg;
     unsigned int select_bg;
     int parser_mode; // 0 = default, 1 = skred-repl contiguous mode
+    int udp_port;
+    int events_port;
     int (*on_open)(hazel_app_t* app, const char* filepath, void* user_data);
     int (*on_save)(hazel_app_t* app, const char* filepath, void* user_data);
     int (*on_open_dir)(hazel_app_t* app, const char* dirpath, void* user_data);
@@ -37,7 +39,9 @@ typedef struct {
 } hazel_config_t;
 
 void hazel_set_config(hazel_app_t* app, const hazel_config_t* config);
+void hazel_get_config(hazel_app_t* app, hazel_config_t* config_out);
 void hazel_set_app_version(hazel_app_t* app, const char* version);
+void hazel_set_status(hazel_app_t* app, const char* status);
 void hazel_load_preferences(hazel_app_t* app);
 
 // Context passed to the evaluation callback to append output asynchronously

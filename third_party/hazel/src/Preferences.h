@@ -27,6 +27,8 @@ class PreferencesWindow : public Fl_Double_Window {
     Fl_Hold_Browser* font_browser_;
     Fl_Choice* theme_choice_;
     Fl_Value_Input* size_input_;
+    Fl_Value_Input* udp_port_input_;
+    Fl_Value_Input* events_port_input_;
     Fl_Box* preview_;
     Fl_Button* ok_;
     Fl_Button* cancel_;
@@ -50,7 +52,7 @@ class PreferencesWindow : public Fl_Double_Window {
     bool applied_ = false;
 
 public:
-    PreferencesWindow(const hazel_config_t& current_cfg) : Fl_Double_Window(420, 500, "Preferences") {
+    PreferencesWindow(const hazel_config_t& current_cfg) : Fl_Double_Window(420, 535, "Preferences") {
         out_cfg_ = current_cfg;
         const char* current_font_name = Fl::get_font_name(current_cfg.font);
         if (current_font_name) selected_font_ = current_font_name;
@@ -71,56 +73,66 @@ public:
         size_input_->bounds(8, 72);
         size_input_->value(current_cfg.font_size);
         
-        preview_ = new Fl_Box(10, 290, 400, 40, "⢀⣴⣾⣿⣿⣷⣦⡀ ⣾⣿ Braille Test");
+        new Fl_Box(10, 290, 100, 25, "UDP Port:");
+        udp_port_input_ = new Fl_Value_Input(110, 290, 80, 25);
+        udp_port_input_->step(1);
+        udp_port_input_->value(current_cfg.udp_port);
+
+        new Fl_Box(200, 290, 100, 25, "Events Port:");
+        events_port_input_ = new Fl_Value_Input(310, 290, 80, 25);
+        events_port_input_->step(1);
+        events_port_input_->value(current_cfg.events_port);
+        
+        preview_ = new Fl_Box(10, 325, 400, 40, "⢀⣴⣾⣿⣿⣷⣦⡀ ⣾⣿ Braille Test");
         preview_->box(FL_DOWN_BOX);
         preview_->color(current_cfg.input_bg);
         preview_->labelcolor(current_cfg.text_fg);
         preview_->labelsize(current_cfg.font_size);
         
-        custom_group_ = new Fl_Group(10, 340, 400, 100);
-        Fl_Box* clbl = new Fl_Box(10, 365, 60, 20, "Colors:");
+        custom_group_ = new Fl_Group(10, 375, 400, 100);
+        Fl_Box* clbl = new Fl_Box(10, 400, 60, 20, "Colors:");
         clbl->align(FL_ALIGN_LEFT | FL_ALIGN_INSIDE);
         
         // Row 1 (Foregrounds)
-        Fl_Box* l1 = new Fl_Box(70, 345, 45, 15, "Text FG"); l1->labelsize(10);
-        btn_fg_ = new ColorButton(70, 360, 45, 20); btn_fg_->my_color = current_cfg.text_fg;
+        Fl_Box* l1 = new Fl_Box(70, 380, 45, 15, "Text FG"); l1->labelsize(10);
+        btn_fg_ = new ColorButton(70, 395, 45, 20); btn_fg_->my_color = current_cfg.text_fg;
         btn_fg_->tooltip("Text Foreground");
         
-        Fl_Box* l6 = new Fl_Box(120, 345, 45, 15, "Err FG"); l6->labelsize(10);
-        btn_err_fg_ = new ColorButton(120, 360, 45, 20); btn_err_fg_->my_color = current_cfg.error_fg;
+        Fl_Box* l6 = new Fl_Box(120, 380, 45, 15, "Err FG"); l6->labelsize(10);
+        btn_err_fg_ = new ColorButton(120, 395, 45, 20); btn_err_fg_->my_color = current_cfg.error_fg;
         btn_err_fg_->tooltip("Error Text Foreground");
         
-        Fl_Box* l7 = new Fl_Box(170, 345, 45, 15, "Note FG"); l7->labelsize(10);
-        btn_md_fg_ = new ColorButton(170, 360, 45, 20); btn_md_fg_->my_color = current_cfg.markdown_fg;
+        Fl_Box* l7 = new Fl_Box(170, 380, 45, 15, "Note FG"); l7->labelsize(10);
+        btn_md_fg_ = new ColorButton(170, 395, 45, 20); btn_md_fg_->my_color = current_cfg.markdown_fg;
         btn_md_fg_->tooltip("Note Text Foreground");
 
-        Fl_Box* l8 = new Fl_Box(220, 345, 45, 15, "Csr FG"); l8->labelsize(10);
-        btn_csr_fg_ = new ColorButton(220, 360, 45, 20); btn_csr_fg_->my_color = current_cfg.cursor_fg;
+        Fl_Box* l8 = new Fl_Box(220, 380, 45, 15, "Csr FG"); l8->labelsize(10);
+        btn_csr_fg_ = new ColorButton(220, 395, 45, 20); btn_csr_fg_->my_color = current_cfg.cursor_fg;
         btn_csr_fg_->tooltip("Cursor Foreground");
         
         // Row 2 (Backgrounds)
-        Fl_Box* l2 = new Fl_Box(70, 390, 45, 15, "Code BG"); l2->labelsize(10);
-        btn_bg_ = new ColorButton(70, 405, 45, 20); btn_bg_->my_color = current_cfg.input_bg;
+        Fl_Box* l2 = new Fl_Box(70, 425, 45, 15, "Code BG"); l2->labelsize(10);
+        btn_bg_ = new ColorButton(70, 440, 45, 20); btn_bg_->my_color = current_cfg.input_bg;
         btn_bg_->tooltip("Code Block Background");
         
-        Fl_Box* l4 = new Fl_Box(120, 390, 45, 15, "Err BG"); l4->labelsize(10);
-        btn_err_ = new ColorButton(120, 405, 45, 20); btn_err_->my_color = current_cfg.error_bg;
+        Fl_Box* l4 = new Fl_Box(120, 425, 45, 15, "Err BG"); l4->labelsize(10);
+        btn_err_ = new ColorButton(120, 440, 45, 20); btn_err_->my_color = current_cfg.error_bg;
         btn_err_->tooltip("Error Block Background");
         
-        Fl_Box* l5 = new Fl_Box(170, 390, 45, 15, "Note BG"); l5->labelsize(10);
-        btn_md_ = new ColorButton(170, 405, 45, 20); btn_md_->my_color = current_cfg.markdown_bg;
+        Fl_Box* l5 = new Fl_Box(170, 425, 45, 15, "Note BG"); l5->labelsize(10);
+        btn_md_ = new ColorButton(170, 440, 45, 20); btn_md_->my_color = current_cfg.markdown_bg;
         btn_md_->tooltip("Note Block Background");
         
-        Fl_Box* l9 = new Fl_Box(220, 390, 45, 15, "Csr BG"); l9->labelsize(10);
-        btn_csr_bg_ = new ColorButton(220, 405, 45, 20); btn_csr_bg_->my_color = current_cfg.cursor_bg;
+        Fl_Box* l9 = new Fl_Box(220, 425, 45, 15, "Csr BG"); l9->labelsize(10);
+        btn_csr_bg_ = new ColorButton(220, 440, 45, 20); btn_csr_bg_->my_color = current_cfg.cursor_bg;
         btn_csr_bg_->tooltip("Cursor Background");
         
-        Fl_Box* l3 = new Fl_Box(270, 390, 45, 15, "Out BG"); l3->labelsize(10);
-        btn_out_ = new ColorButton(270, 405, 45, 20); btn_out_->my_color = current_cfg.output_bg;
+        Fl_Box* l3 = new Fl_Box(270, 425, 45, 15, "Out BG"); l3->labelsize(10);
+        btn_out_ = new ColorButton(270, 440, 45, 20); btn_out_->my_color = current_cfg.output_bg;
         btn_out_->tooltip("Output Block Background");
 
-        Fl_Box* l10 = new Fl_Box(320, 390, 45, 15, "Sel BG"); l10->labelsize(10);
-        btn_sel_bg_ = new ColorButton(320, 405, 45, 20); btn_sel_bg_->my_color = current_cfg.select_bg;
+        Fl_Box* l10 = new Fl_Box(320, 425, 45, 15, "Sel BG"); l10->labelsize(10);
+        btn_sel_bg_ = new ColorButton(320, 440, 45, 20); btn_sel_bg_->my_color = current_cfg.select_bg;
         btn_sel_bg_->tooltip("Selection Background");
         
         custom_group_->end();
@@ -149,8 +161,8 @@ public:
         btn_csr_bg_->callback(color_cb, this);
         btn_sel_bg_->callback(color_cb, this);
 
-        cancel_ = new Fl_Button(240, 455, 80, 30, "Cancel");
-        ok_ = new Fl_Button(330, 455, 80, 30, "OK");
+        cancel_ = new Fl_Button(240, 490, 80, 30, "Cancel");
+        ok_ = new Fl_Button(330, 490, 80, 30, "OK");
         
         int num_fonts = Fl::set_fonts("-*");
         int selected_idx = 1;
@@ -297,6 +309,8 @@ public:
             PreferencesWindow* self = (PreferencesWindow*)v;
             self->selected_theme_ = self->theme_choice_->value();
             self->selected_size_ = (int)self->size_input_->value();
+            self->out_cfg_.udp_port = (int)self->udp_port_input_->value();
+            self->out_cfg_.events_port = (int)self->events_port_input_->value();
             self->out_cfg_.text_fg = self->btn_fg_->my_color;
             self->out_cfg_.error_fg = self->btn_err_fg_->my_color;
             self->out_cfg_.markdown_fg = self->btn_md_fg_->my_color;

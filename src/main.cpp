@@ -146,8 +146,8 @@ void my_eval_engine(const char* input, hazel_ctx_t* ctx, void* user_data) {
 }
 
 int main(int argc, char** argv) {
-    int udp_port = 60440;
-    int events_port = 0;
+    int udp_port = -1;
+    int events_port = -1;
     int frames = 128;
     int voices = 64;
     const char* file_to_load = nullptr;
@@ -163,17 +163,6 @@ int main(int argc, char** argv) {
         }
     }
 
-    if (skred_start(frames, voices, udp_port) != 0) {
-        std::cerr << "Failed to start skred engine!" << std::endl;
-        return 1;
-    }
-    
-    if (events_port > 0) {
-        skred_udp_events_start(events_port);
-    }
-    
-    skred_logger(1);
-    
     Fl::set_font(FL_COURIER, "DejaVu Sans Mono");
     hazel_app_t* app = hazel_create("Skred", my_eval_engine, nullptr);
     
@@ -192,13 +181,43 @@ int main(int argc, char** argv) {
     config.cursor_bg = FL_BLACK;
     config.select_bg = fl_rgb_color(180, 200, 255);
     config.parser_mode = 1;
+    config.udp_port = 60440;
+    config.events_port = 60441;
     config.on_open = my_load_cb;
     config.on_save = my_save_cb;
     config.on_open_dir = my_dir_cb;
     config.startup_text = "##\nv0 a0 w0 f440 t 0.01 0 1 .25\n";
     config.help_extension_cb = skred_help_as_html;
+    
     hazel_set_config(app, &config);
     hazel_load_preferences(app);
+    hazel_get_config(app, &config);
+    
+    // Command-line args override preferences
+    if (udp_port >= 0) config.udp_port = udp_port;
+    if (events_port >= 0) config.events_port = events_port;
+    
+    // Push final config back to hazel so the prefs window sees the overrides if any
+    hazel_set_config(app, &config);
+
+    int start_res = skred_start(frames, voices, config.udp_port);
+    if (start_res != 0) {
+        std::cerr << "Failed to start skred engine!" << std::endl;
+        return 1;
+    }
+    
+    int events_res = 1; // 1 means not started/error
+    if (config.events_port > 0) {
+        events_res = skred_udp_events_start(config.events_port);
+    }
+    
+    skred_logger(1);
+    
+    char status_str[256];
+    snprintf(status_str, sizeof(status_str), "UDP: %d (%s)  Evts: %d (%s)",
+             config.udp_port, (start_res == 0) ? "OK" : "Err",
+             config.events_port, (events_res == 0) ? "OK" : (config.events_port > 0 ? "Err" : "Off"));
+    hazel_set_status(app, status_str);
 
     char ver_str[256];
 #ifdef SKRED_REPL_VERSION

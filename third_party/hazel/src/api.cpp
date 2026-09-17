@@ -92,9 +92,19 @@ void hazel_set_app_version(hazel_app_t* app, const char* version) {
     if (app) ((HazelApp*)app)->setAppVersion(version);
 }
 
+void hazel_set_status(hazel_app_t* app, const char* status) {
+    if (app) ((HazelApp*)app)->setExtraStatus(status);
+}
+
 void hazel_set_config(hazel_app_t* app, const hazel_config_t* config) {
     if (app && config) {
         ((HazelApp*)app)->setConfig(config);
+    }
+}
+
+void hazel_get_config(hazel_app_t* app, hazel_config_t* config_out) {
+    if (app && config_out) {
+        *config_out = ((HazelApp*)app)->getConfig();
     }
 }
 

@@ -1473,7 +1473,11 @@ void HazelApp::updateStatusBar() {
     if (slash) fname = slash + 1;
     
     char status[512];
-    snprintf(status, sizeof(status), "Ln %d, Col %d  |  %s", line, col, mode_with_idx);
+    if (extra_status_.empty()) {
+        snprintf(status, sizeof(status), "Ln %d, Col %d  |  %s", line, col, mode_with_idx);
+    } else {
+        snprintf(status, sizeof(status), "Ln %d, Col %d  |  %s  |  %s", line, col, mode_with_idx, extra_status_.c_str());
+    }
     
     if (status_info_ != status) {
         status_info_ = status;
@@ -1678,6 +1682,7 @@ void HazelApp::savePreferences(const std::string& font_name, int theme, int size
         out << theme << "\n";
         out << size << "\n";
         out << config_.text_fg << " " << config_.input_bg << " " << config_.output_bg << " " << config_.error_bg << " " << config_.markdown_bg << " " << config_.error_fg << " " << config_.markdown_fg << " " << config_.cursor_fg << " " << config_.cursor_bg << " " << config_.select_bg << "\n";
+        out << config_.udp_port << " " << config_.events_port << "\n";
     }
 }
 
@@ -1707,8 +1712,19 @@ void HazelApp::loadPreferences() {
             Fl_Color sel_b = FL_SELECTION_COLOR;
             if (!(in >> sel_b)) sel_b = fl_rgb_color(180, 200, 255);
             config_.select_bg = sel_b; // Temporary save to config_ so it propagates
+            
+            int udp = 60440, evt = 60441;
+            if (in >> udp >> evt) {
+                config_.udp_port = udp;
+                config_.events_port = evt;
+            } else {
+                config_.udp_port = 60440;
+                config_.events_port = 60441;
+            }
         } else {
             config_.select_bg = fl_rgb_color(180, 200, 255);
+            config_.udp_port = 60440;
+            config_.events_port = 60441;
         }
         
         hazel_config_t cfg = config_;
