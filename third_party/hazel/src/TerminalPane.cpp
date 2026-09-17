@@ -118,18 +118,32 @@ void TerminalPane::evaluateCommand() {
 
 int TerminalPane::handle(int event) {
     if (event == FL_PUSH || event == FL_DRAG || event == FL_RELEASE) {
-        if (mVScrollBar && mVScrollBar->visible() && Fl::event_x() >= mVScrollBar->x()) {
-            return Fl_Text_Editor::handle(event);
-        }
         if (event == FL_PUSH) {
             this->take_focus();
         }
-        return 1;
+        return Fl_Text_Editor::handle(event);
+    }
+    
+    if (event == FL_PASTE) {
+        if (insert_position() < prompt_pos_) {
+            insert_position(buf_->length());
+            show_insert_position();
+        }
+        return Fl_Text_Editor::handle(event);
     }
     
     if (event == FL_KEYBOARD || event == FL_SHORTCUT) {
         int key = Fl::event_key();
         int state = Fl::event_state();
+        
+        // If typing a printable character while in history, snap to end
+        if (Fl::event_text() && Fl::event_length() > 0 && 
+            !(state & (FL_CTRL | FL_COMMAND | FL_ALT))) {
+            if (insert_position() < prompt_pos_ && key != FL_Enter && key != FL_KP_Enter) {
+                insert_position(buf_->length());
+                show_insert_position();
+            }
+        }
         
         // Zoom In/Out
         if ((key == '=' || key == '-' || key == '0') && (state & FL_COMMAND)) {
@@ -194,6 +208,8 @@ int TerminalPane::handle(int event) {
             return 1;
         } else if (key == FL_BackSpace) {
             if (insert_position() <= prompt_pos_) return 1;
+        } else if (key == FL_Delete) {
+            if (insert_position() < prompt_pos_) return 1;
         } else if (key == FL_Left) {
             if (insert_position() <= prompt_pos_) return 1;
         } else if (key == FL_Home) {
