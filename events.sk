@@ -1,0 +1,39 @@
+## 0 You should have started with -e60441
+
+## ADSR events
+
+v5 f110 w15 a0 t 0 0 1 .125 r1 ds.8 G6 H6
+v6 f110 w17 a0 N 12,5 L.05 g.1 t 0 0 1 .25
+## Store our format strings in macro slots 0 and 1 ) 
+[ /voice/finished %d ] e>0 
+[ /voice/release %d ] e>1 
+## Select voice 5 and enable its lifecycle control events
+v5 vc1  
+## Bind Voice Finished (type 3) to execute '5 0 >u' 
+[ 5 0 >u ] /ceb 3 5 
+## Bind Envelope Release (type 2) to execute '5 1 >u' 
+[ 5 1 >u ] /ceb 2 5 
+## Start the control event dispatcher thread ) 
+/cer 1
+## in a shell window start a nc session and send SUB
+# nc -u 127.0.0.1 60441
+
+##
+( 33 45 37 43 - 33 50 45 ) /SS 0
+##
+y0 M60
+[ v5 n&0 l1 ] x0
+[ v5 l0 ] x1
+## SEQ events
+
+[ /seq/loop %d ] e>2
+
+y0 yc1
+
+[ 0 0 >u ] /ceb 5 2
+/cer 1
+
+M60
+y0
+[v5 l1] x0
+[v5 l0] x1
