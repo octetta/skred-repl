@@ -29,6 +29,7 @@ typedef struct {
     unsigned int select_bg;
     int parser_mode; // 0 = default, 1 = skred-repl contiguous mode
     int udp_port;
+    int max_voices;
     int events_port;
     int (*on_open)(hazel_app_t* app, const char* filepath, void* user_data);
     int (*on_save)(hazel_app_t* app, const char* filepath, void* user_data);
@@ -36,6 +37,8 @@ typedef struct {
     const char* startup_text;
     const char* help_extension_html;
     const char* (*help_extension_cb)(const char* path);
+    unsigned int command_bg;
+    unsigned int command_fg;
 } hazel_config_t;
 
 void hazel_set_config(hazel_app_t* app, const hazel_config_t* config);

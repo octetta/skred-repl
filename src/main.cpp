@@ -196,6 +196,10 @@ int main(int argc, char** argv) {
     // Command-line args override preferences
     if (udp_port >= 0) config.udp_port = udp_port;
     if (events_port >= 0) config.events_port = events_port;
+    if (voices == -1) {
+        if (config.max_voices > 0) voices = config.max_voices;
+        else voices = 8;
+    }
     
     // Push final config back to hazel so the prefs window sees the overrides if any
     hazel_set_config(app, &config);

@@ -35,7 +35,11 @@ public:
                 HazelApp* app = (HazelApp*)v;
                 const char* lbl = w->label();
                 char cmd[16];
-                snprintf(cmd, sizeof(cmd), "_MC%s", lbl);
+                if (app->getConfig().parser_mode == 2) {
+                    snprintf(cmd, sizeof(cmd), "\\pq %s", lbl);
+                } else {
+                    snprintf(cmd, sizeof(cmd), "_MC%s", lbl);
+                }
                 hazel_ctx_t* term_ctx = new hazel_ctx_t();
                 memset(term_ctx, 0, sizeof(hazel_ctx_t));
                 term_ctx->app = app;
@@ -123,13 +127,13 @@ public:
         const char* cmd = "CTRL";
         #endif
         
-        if (app_->getConfig().parser_mode != 1) {
+        if (app_->getConfig().parser_mode == 0) {
             drawKeyLeft(left_x, cur_y, cmd, "U", "Mkdn");
             drawKeyLeft(left_x, cur_y, cmd, "Y", "Code");
         }
         drawKeyLeft(left_x, cur_y, cmd, "~", "Terminal");
         drawKeyLeft(left_x, cur_y, cmd, "D", "Delete");
-        if (app_->getConfig().parser_mode != 1) {
+        if (app_->getConfig().parser_mode == 0) {
             drawKeyLeft(left_x, cur_y, "ALT", "RET", "Split");
         }
         drawKeyLeft(left_x, cur_y, cmd, "RET", "Eval");
@@ -212,7 +216,7 @@ public:
         disp_->value(text.c_str());
     }
 
-    HelpWindow(const std::string& app_title, const std::string& app_version, bool is_skred_mode, const char* ext_html, const char* (*help_cb)(const char*)) : Fl_Double_Window(600, 700, "Help & About") {
+    HelpWindow(const std::string& app_title, const std::string& app_version, int parser_mode, const char* ext_html, const char* (*help_cb)(const char*)) : Fl_Double_Window(600, 700, "Help & About") {
         help_cb_ = help_cb;
         this->color(fl_rgb_color(245, 245, 250));
         
@@ -261,14 +265,22 @@ public:
             "<tr><td align='right'><b>Cmd/Ctrl + R</b></td><td>Run All Blocks</td></tr>"
             "<tr><td align='right'><b>Cmd/Ctrl + D</b></td><td>Delete Current Block</td></tr>"
             "<tr><td align='right'><b>Cmd/Ctrl + Up / Down</b></td><td>Move Cell</td></tr>"
-            "<tr><td align='right'><b>Alt + A..Z</b></td><td>Trigger Macros A-Z</td></tr>"
             "<tr><td colspan='2'> </td></tr>"
             "<tr><td align='right'><b>Ctrl + `</b></td><td>Toggle Terminal Panel</td></tr>"
             "<tr><td align='right'><b>Ctrl + Tab / Down</b></td><td>Focus Terminal</td></tr>"
             "<tr><td align='right'><b>Ctrl + Tab / Up</b></td><td>Focus Editor</td></tr>"
             "</table>";
             
-        if (is_skred_mode) {
+        if (parser_mode == 2) {
+            base_help_text_ += 
+                "<h3 align='center'>KSynth-REPL Mode</h3>"
+                "<table width='100%' border='0' cellpadding='4'>"
+                "<tr><td align='right' width='45%'><b>//</b></td><td>starts a Note Block</td></tr>"
+                "<tr><td align='right'><b>/</b></td><td>continues a Note Block</td></tr>"
+                "<tr><td align='right'><b><i>(normal line)</i></b></td><td>starts a Code Block</td></tr>"
+                "<tr><td align='right'><b>Alt + A-Z</b></td><td>Play Variable A-Z (\\p)</td></tr>"
+                "</table>";
+        } else if (parser_mode == 1) {
             base_help_text_ += 
                 "<h3 align='center'>Skred-REPL Mode</h3>"
                 "<table width='100%' border='0' cellpadding='4'>"
@@ -312,7 +324,7 @@ static void style_update_cb(int pos, int nInserted, int nDeleted, int nRestyled,
         }
     }
     
-    if (app->getConfig().parser_mode == 1) {
+    if (app->getConfig().parser_mode > 0) {
         if (nInserted > 0) {
             std::string styles(nInserted, 'A');
             style_buf->replace(pos, pos + nDeleted, styles.c_str());
@@ -333,17 +345,31 @@ static void style_update_cb(int pos, int nInserted, int nDeleted, int nRestyled,
             
             bool starts_with_hash_hash = false;
             bool starts_with_hash = false;
+            bool is_command = false;
             
             int len = line_end - line_start;
-            if (len >= 2 && buffer->char_at(line_start) == '#' && buffer->char_at(line_start + 1) == '#') {
-                starts_with_hash_hash = true;
-            } else if (len >= 1 && buffer->char_at(line_start) == '#') {
-                starts_with_hash = true;
+            if (app->getConfig().parser_mode == 2) {
+                if (len >= 2 && buffer->char_at(line_start) == '/' && buffer->char_at(line_start + 1) == '/') {
+                    starts_with_hash_hash = true;
+                } else if (len >= 1 && buffer->char_at(line_start) == '/') {
+                    starts_with_hash = true;
+                } else if (len >= 1 && buffer->char_at(line_start) == '\\') {
+                    is_command = true;
+                }
+            } else {
+                if (len >= 2 && buffer->char_at(line_start) == '#' && buffer->char_at(line_start + 1) == '#') {
+                    starts_with_hash_hash = true;
+                } else if (len >= 1 && buffer->char_at(line_start) == '#') {
+                    starts_with_hash = true;
+                }
             }
             
             if (starts_with_hash_hash) {
                 in_comment = true;
             } else if (!starts_with_hash) {
+                in_comment = false;
+            }
+            if (is_command) {
                 in_comment = false;
             }
             
@@ -358,7 +384,8 @@ static void style_update_cb(int pos, int nInserted, int nDeleted, int nRestyled,
                     j--; 
                     in_comment = false;
                 } else {
-                    new_styles[j] = in_comment ? 'D' : 'A';
+                    if (is_command) new_styles[j] = 'E';
+                    else new_styles[j] = in_comment ? 'D' : 'A';
                 }
             }
             i = line_end + 1;
@@ -389,8 +416,8 @@ static void style_update_cb(int pos, int nInserted, int nDeleted, int nRestyled,
             target_style = app->getPendingStyle();
             app->setPendingStyle(0);
         } else {
-            if (curr == 'A' || curr == 'D') target_style = curr;
-            else if (prev == 'A' || prev == 'D') target_style = prev;
+            if (curr == 'A' || curr == 'D' || curr == 'E') target_style = curr;
+            else if (prev == 'A' || prev == 'D' || prev == 'E') target_style = prev;
         }
         
         std::string styles(nInserted, target_style);
@@ -495,7 +522,7 @@ int HazelEditor::handle(int event) {
         }
         
         // Convert to Markdown
-        if (app_->getConfig().parser_mode != 1 && key == 'u' && (Fl::event_state() & FL_COMMAND)) {
+        if (app_->getConfig().parser_mode == 0 && key == 'u' && (Fl::event_state() & FL_COMMAND)) {
             int pos = insert_position();
             char style = app_->getStyleAt(pos);
             if (style != 'A' && pos > 0 && app_->getStyleAt(pos - 1) == 'A' && buffer()->char_at(pos - 1) != '\n') {
@@ -525,7 +552,7 @@ int HazelEditor::handle(int event) {
         }
         
         // Convert to Code
-        if (app_->getConfig().parser_mode != 1 && key == 'y' && (Fl::event_state() & FL_COMMAND)) {
+        if (app_->getConfig().parser_mode == 0 && key == 'y' && (Fl::event_state() & FL_COMMAND)) {
             int pos = insert_position();
             char style = app_->getStyleAt(pos);
             if (style != 'D' && pos > 0 && app_->getStyleAt(pos - 1) == 'D' && buffer()->char_at(pos - 1) != '\n') {
@@ -558,7 +585,11 @@ int HazelEditor::handle(int event) {
         if (key >= 'a' && key <= 'z' && (Fl::event_state() & FL_ALT)) {
             char lbl[2] = {(char)('A' + (key - 'a')), '\0'};
             char cmd[16];
-            snprintf(cmd, sizeof(cmd), "_MC%s", lbl);
+            if (app_->getConfig().parser_mode == 2) {
+                snprintf(cmd, sizeof(cmd), "\\pq %s", lbl);
+            } else {
+                snprintf(cmd, sizeof(cmd), "_MC%s", lbl);
+            }
             hazel_ctx_t* term_ctx = new hazel_ctx_t();
             memset(term_ctx, 0, sizeof(hazel_ctx_t));
             term_ctx->app = app_;
@@ -577,7 +608,7 @@ int HazelEditor::handle(int event) {
         }
 
         // Split Cell (Alt+Enter)
-        if (app_->getConfig().parser_mode != 1 && (key == FL_Enter || key == FL_KP_Enter) && (Fl::event_state() & FL_ALT)) {
+        if (app_->getConfig().parser_mode == 0 && (key == FL_Enter || key == FL_KP_Enter) && (Fl::event_state() & FL_ALT)) {
             int pos = insert_position();
             char current_style = app_->getStyleAt(pos);
             if (current_style == 'C' || current_style == 'B') return 1; // Don't split output
@@ -641,7 +672,7 @@ int HazelEditor::handle(int event) {
                     for (int i = start; i < end; i++) {
                         char s = app_->getStyleAt(i);
                         if (app_->isOutputStyle(s)) return 1;
-                        if (app_->getConfig().parser_mode != 1 && s != first_s) return 1; // Prevent deleting across multiple cell types
+                        if (app_->getConfig().parser_mode == 0 && s != first_s) return 1; // Prevent deleting across multiple cell types
                     }
                 }
             } else {
@@ -652,7 +683,7 @@ int HazelEditor::handle(int event) {
                         if (app_->isOutputStyle(s)) return 1;
                         
                         char curr = app_->getStyleAt(pos);
-                        if (app_->getConfig().parser_mode != 1) {
+                        if (app_->getConfig().parser_mode == 0) {
                             if (curr != 0 && s != 0 && curr != s) return 1;
                             
                             if (buffer()->char_at(pos - 1) == '\n' && pos > 1 && pos < buffer()->length()) {
@@ -665,7 +696,7 @@ int HazelEditor::handle(int event) {
                         char s = app_->getStyleAt(pos);
                         if (app_->isOutputStyle(s)) return 1;
                         
-                        if (app_->getConfig().parser_mode != 1) {
+                        if (app_->getConfig().parser_mode == 0) {
                             if (buffer()->char_at(pos) == '\n' && pos > 0 && pos + 1 < buffer()->length()) {
                                 if (app_->getStyleAt(pos - 1) != app_->getStyleAt(pos + 1)) return 1;
                             }
@@ -694,9 +725,9 @@ int HazelEditor::handle(int event) {
             if (key == 'c' || key == 'x') {
                 int pos = insert_position();
                 char style = app_->getStyleAt(pos);
-                if (style != 'A' && style != 'D' && pos > 0) {
+                if (style != 'A' && style != 'D' && style != 'E' && pos > 0) {
                     char left = app_->getStyleAt(pos - 1);
-                    if (left == 'A' || left == 'D') {
+                    if (left == 'A' || left == 'D' || left == 'E') {
                         pos = pos - 1;
                         style = left;
                     }
@@ -802,9 +833,11 @@ HazelApp::HazelApp(const char* title, hazel_eval_cb_t cb, void* user_data)
     config_.output_bg = fl_rgb_color(245, 245, 250);
     config_.error_bg = fl_rgb_color(255, 235, 235);
     config_.markdown_bg = fl_rgb_color(245, 255, 245);
+    config_.command_bg = fl_rgb_color(250, 240, 255); // light purple
     config_.text_fg = FL_BLACK;
     config_.error_fg = FL_DARK_RED;
     config_.markdown_fg = FL_DARK_GREEN;
+    config_.command_fg = fl_rgb_color(90, 0, 150); // dark purple
     config_.cursor_fg = FL_WHITE;
     config_.cursor_bg = FL_BLACK;
     config_.select_bg = fl_rgb_color(180, 200, 255);
@@ -904,7 +937,7 @@ void HazelApp::loadFile(const char* filepath) {
 }
 
 void HazelApp::openFile() {
-    const char* filename = fl_file_chooser("Open Notebook", "Notebook Files (*.{md,sk})\tMarkdown (*.md)\tSkred Script (*.sk)", NULL);
+    const char* filename = fl_file_chooser("Open Notebook", "KSynth Files (*.ks)", NULL);
     if (filename) {
         loadFile(filename);
     }
@@ -973,7 +1006,7 @@ void HazelApp::saveFileAs(const char* filepath) {
 }
 
 void HazelApp::promptSaveAs() {
-    const char* filename = fl_file_chooser("Save Notebook As...", "Notebook Files (*.{md,sk})\tMarkdown (*.md)\tSkred Script (*.sk)", NULL);
+    const char* filename = fl_file_chooser("Save Notebook As...", "KSynth Files (*.ks)", NULL);
     if (filename) {
         saveFileAs(filename);
     }
@@ -993,15 +1026,15 @@ void HazelApp::evaluateCurrentBlock() {
     int pos = editor_->insert_position();
     char style = getStyleAt(pos);
     
-    if (style != 'A' && style != 'D' && pos > 0) {
+    if (style != 'A' && style != 'D' && style != 'E' && pos > 0) {
         char left = getStyleAt(pos - 1);
-        if (left == 'A' || left == 'D') {
+        if (left == 'A' || left == 'D' || left == 'E') {
             pos = pos - 1;
             style = left;
         }
     }
     
-    if (style != 'A' && style != 'D') return; 
+    if (style != 'A' && style != 'D' && style != 'E') return; 
     
     int start = pos;
     while (start > 0 && style_buffer_->char_at(start - 1) == style) start--;
@@ -1219,19 +1252,22 @@ void HazelApp::startRunAll() {
             while (block_start > 0 && getStyleAt(block_start - 1) == 'A') block_start--;
         } else if (s == 'D') {
             while (block_start > 0 && getStyleAt(block_start - 1) == 'D') block_start--;
+        } else if (s == 'E') {
+            while (block_start > 0 && getStyleAt(block_start - 1) == 'E') block_start--;
         }
     }
     
     editor_->insert_position(block_start);
-    if (getStyleAt(block_start) != 'A') {
+    if (getStyleAt(block_start) != 'A' && getStyleAt(block_start) != 'E') {
         int search = block_start;
-        while (search < buffer_->length() && getStyleAt(search) != 'A') search++;
+        while (search < buffer_->length() && getStyleAt(search) != 'A' && getStyleAt(search) != 'E') search++;
         editor_->insert_position(search);
     }
     
     highest_modified_pos_ = -1; // Reset since we are running!
     
-    if (getStyleAt(editor_->insert_position()) == 'A') {
+    char init_s = getStyleAt(editor_->insert_position());
+    if (init_s == 'A' || init_s == 'E') {
         run_all_pending_ = true;
         evaluateCurrentBlock();
     }
@@ -1249,7 +1285,7 @@ void HazelApp::finishEvaluation(hazel_ctx_t* ctx) {
         int search = ctx->insert_pos;
         while (search < buffer_->length()) {
             char s = getStyleAt(search);
-            if (s == 'A' || s == 'D') {
+            if (s == 'A' || s == 'D' || s == 'E') {
                 editor_->insert_position(search);
                 editor_->show_insert_position();
                 break;
@@ -1262,12 +1298,12 @@ void HazelApp::finishEvaluation(hazel_ctx_t* ctx) {
         int pos = editor_->insert_position();
         char style = getStyleAt(pos);
         
-        if (style == 'A' || style == 'D') {
+        if (style == 'A' || style == 'D' || style == 'E') {
             int end = pos;
             while (end < buffer_->length() && getStyleAt(end) == style) end++;
             
             // A cell is considered empty if it contains just a trailing newline scaffold at the EOF.
-            if (style == 'A' && end - pos <= 1 && end >= buffer_->length()) {
+            if ((style == 'A' || style == 'E') && end - pos <= 1 && end >= buffer_->length()) {
                 run_all_pending_ = false;
                 
                 editor_->insert_position(buffer_->length());
@@ -1311,9 +1347,9 @@ void HazelEditor::draw() {
         if (is_empty_line) {
             if (p == insert_position() && app_->getPendingStyle() != 0) return app_->getPendingStyle();
             char p_curr = app_->getStyleAt(p);
-            if (p_curr == 'A' || p_curr == 'D' || p_curr == 'C' || p_curr == 'B') return p_curr;
+            if (p_curr == 'A' || p_curr == 'D' || p_curr == 'E' || p_curr == 'C' || p_curr == 'B') return p_curr;
             char p_prev = (p > 0) ? app_->getStyleAt(p - 1) : '\0';
-            if (p_prev == 'A' || p_prev == 'D' || p_prev == 'C' || p_prev == 'B') return p_prev;
+            if (p_prev == 'A' || p_prev == 'D' || p_prev == 'E' || p_prev == 'C' || p_prev == 'B') return p_prev;
             return 'A';
         }
         char s = app_->getStyleAt(p);
@@ -1334,8 +1370,9 @@ void HazelEditor::draw() {
             
             if (line_start == line_end) {
                 char p = getEffectiveStyleAt(bg_pos);
-                if (p == 'D' || app_->isOutputStyle(p)) {
+                if (p == 'D' || p == 'E' || app_->isOutputStyle(p)) {
                     if (p == 'D') fl_color(fl_rgb_color(240, 255, 240));
+                    else if (p == 'E') fl_color(app_->getConfig().command_bg);
                     else if (p == 'B') fl_color(fl_rgb_color(240, 240, 245));
                     else if (p == 'C') fl_color(fl_rgb_color(255, 230, 230));
                     
@@ -1400,7 +1437,7 @@ void HazelEditor::draw() {
                 
                 char badge[16];
                 if (curr_type == 0) snprintf(badge, sizeof(badge), "C%d", block_idx);
-                else if (curr_type == 1) snprintf(badge, sizeof(badge), (app_->getConfig().parser_mode == 1) ? "N%d" : "M%d", block_idx);
+                else if (curr_type == 1) snprintf(badge, sizeof(badge), (app_->getConfig().parser_mode > 0) ? "N%d" : "M%d", block_idx);
                 else snprintf(badge, sizeof(badge), "O%d", block_idx);
                 
                 if (line_start > 0) {
@@ -1491,7 +1528,8 @@ void HazelApp::updateStatusBar(bool force) {
     }
     
     const char* mode = "Code";
-    if (style == 'D') mode = (config_.parser_mode == 1) ? "Note" : "Markdown";
+    if (style == 'D') mode = (config_.parser_mode > 0) ? "Note" : "Markdown";
+    else if (style == 'E') mode = "Meta";
     else if (isOutputStyle(style)) mode = "Output";
     
     char target_block = isOutputStyle(style) ? 'B' : style;
@@ -1554,6 +1592,7 @@ void HazelApp::applyConfig() {
     styletable_[1] = { (Fl_Color)config_.text_fg, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.output_bg };
     styletable_[2] = { (Fl_Color)config_.error_fg, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.error_bg };
     styletable_[3] = { (Fl_Color)config_.markdown_fg, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.markdown_bg };
+    styletable_[4] = { (Fl_Color)config_.command_fg, config_.font, config_.font_size, Fl_Text_Display::ATTR_BGCOLOR_EXT, (Fl_Color)config_.command_bg };
 }
 
 void HazelApp::setConfig(const hazel_config_t* config) {
@@ -1564,7 +1603,7 @@ void HazelApp::setConfig(const hazel_config_t* config) {
     // Only apply startup text if buffer is completely empty
     if (config_.startup_text && buffer_->length() == 0) {
         buffer_->text(config_.startup_text);
-        std::string start_styles(strlen(config_.startup_text), 'D');
+        std::string start_styles(strlen(config_.startup_text), (config_.parser_mode == 2) ? 'A' : 'D');
         style_buffer_->text(start_styles.c_str());
         buffer_->append("\n");
         style_buffer_->append("A");
@@ -1618,7 +1657,7 @@ void HazelApp::appendBlock(char style, const char* text) {
     style_buffer_->insert(pos, styles.c_str());
     buffer_->add_modify_callback(style_update_cb, this);
     
-    if (config_.parser_mode == 1) {
+    if (config_.parser_mode > 0) {
         style_update_cb(0, 0, 0, 0, "", this);
     }
 }
@@ -1723,7 +1762,7 @@ void HazelApp::savePreferences(const std::string& font_name, int theme, int size
         out << theme << "\n";
         out << size << "\n";
         out << config_.text_fg << " " << config_.input_bg << " " << config_.output_bg << " " << config_.error_bg << " " << config_.markdown_bg << " " << config_.error_fg << " " << config_.markdown_fg << " " << config_.cursor_fg << " " << config_.cursor_bg << " " << config_.select_bg << "\n";
-        out << config_.udp_port << " " << config_.events_port << "\n";
+        out << config_.udp_port << " " << config_.events_port << " " << config_.max_voices << "\n";
     }
 }
 
@@ -1754,18 +1793,22 @@ void HazelApp::loadPreferences() {
             if (!(in >> sel_b)) sel_b = fl_rgb_color(180, 200, 255);
             config_.select_bg = sel_b; // Temporary save to config_ so it propagates
             
-            int udp = 60440, evt = 60441;
+            int udp = 60440, evt = 60441, mv = 8;
             if (in >> udp >> evt) {
                 config_.udp_port = udp;
                 config_.events_port = evt;
+                if (in >> mv) config_.max_voices = mv;
+                else config_.max_voices = 8;
             } else {
                 config_.udp_port = 60440;
                 config_.events_port = 60441;
+                config_.max_voices = 8;
             }
         } else {
             config_.select_bg = fl_rgb_color(180, 200, 255);
             config_.udp_port = 60440;
             config_.events_port = 60441;
+            config_.max_voices = 8;
         }
         
         hazel_config_t cfg = config_;
@@ -1824,7 +1867,7 @@ void HazelApp::loadPreferences() {
 }
 
 void HazelApp::showHelpWindow() {
-    HelpWindow* hw = new HelpWindow(app_title_, app_version_, config_.parser_mode == 1, config_.help_extension_html, config_.help_extension_cb);
+    HelpWindow* hw = new HelpWindow(app_title_, app_version_, config_.parser_mode > 0, config_.help_extension_html, config_.help_extension_cb);
     hw->callback([](Fl_Widget* w, void*) {
         w->hide();
         Fl::delete_widget(w);
