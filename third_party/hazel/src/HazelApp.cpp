@@ -937,7 +937,7 @@ void HazelApp::loadFile(const char* filepath) {
 }
 
 void HazelApp::openFile() {
-    const char* filename = fl_file_chooser("Open Notebook", "KSynth Files (*.ks)", NULL);
+    const char* filename = fl_file_chooser("Open Notebook", "Skred Files (*.sk)", NULL);
     if (filename) {
         loadFile(filename);
     }
@@ -1006,7 +1006,7 @@ void HazelApp::saveFileAs(const char* filepath) {
 }
 
 void HazelApp::promptSaveAs() {
-    const char* filename = fl_file_chooser("Save Notebook As...", "KSynth Files (*.ks)", NULL);
+    const char* filename = fl_file_chooser("Save Notebook As...", "Skred Files (*.sk)", NULL);
     if (filename) {
         saveFileAs(filename);
     }
