@@ -198,7 +198,7 @@ int main(int argc, char** argv) {
     if (events_port >= 0) config.events_port = events_port;
     if (voices == -1) {
         if (config.max_voices > 0) voices = config.max_voices;
-        else voices = 8;
+        else voices = 16;
     }
     
     // Push final config back to hazel so the prefs window sees the overrides if any
